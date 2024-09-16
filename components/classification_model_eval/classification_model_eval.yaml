@@ -1,0 +1,26 @@
+# <component>
+name: classification_model_eval
+display_name: Classification Model Test Evaluation
+version: 1.0
+type: command
+inputs:
+  model_name:
+    type: string
+    description: Name of the published model
+  model_version:
+    type: string
+    description: Version of the published model
+  test_data:
+    type: uri_file
+    description: Path to the test data CSV file
+outputs:
+  results_file:
+    type: uri_file
+    description: Path to the file with model evaluation results
+command: >
+  python classification_model_eval.py
+  --model_name ${{inputs.model_name}}
+  --model_version ${{inputs.model_version}}
+  --test_data ${{inputs.test_data}}
+  --output_dir ${{outputs.results_file}}
+environment: azureml:<your-environment-name>

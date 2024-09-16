@@ -1,0 +1,27 @@
+# <component>
+name: split_data
+display_name: Dataset Splitter Component
+version: 1.0
+type: command
+inputs:
+  input_data:
+    type: uri_file
+    description: Path to the input dataset file
+  split_ratio:
+    type: number
+    description: Ratio to split the dataset into training and testing (default is 0.7)
+    default: 0.7
+outputs:
+  train_data:
+    type: uri_folder
+    description: Path to the train dataset
+  test_data:
+    type: uri_folder
+    description: Path to the test dataset
+command: >
+  python split_data.py
+  --input_data ${{inputs.input_data}}
+  --train_output ${{outputs.train_data}}
+  --test_output ${{outputs.test_data}}
+  --split_ratio ${{inputs.split_ratio}}
+environment: azureml:<your-environment-name>
