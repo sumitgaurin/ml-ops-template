@@ -32,7 +32,7 @@ stages:
       diaplayName: 'Deploy ARM Template for Azure ML Service'
       inputs:
         deploymentScope: 'Resource Group'
-        azureResourceManagerConnection: '$(AZURE_RM_SVC_CONNECTION)'
+        azureResourceManagerConnection: '$(AZURE_RM_SVC_CONNECTION_DEV)'
         action: 'Create Or Update Resource Group'
         resourceGroupName: '${{ parameters.resource_group_name }}'
         location: '${{ parameters.location }}'
@@ -46,7 +46,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Verify Deployment'
       inputs:
-        azureSubscription: '$(AZURE_RM_SVC_CONNECTION)'
+        azureSubscription: '$(AZURE_RM_SVC_CONNECTION_DEV)'
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
