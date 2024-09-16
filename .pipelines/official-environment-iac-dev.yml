@@ -23,7 +23,7 @@ stages:
   displayName: 'Deploy Azure Machine Learning Service'
   jobs:
   - job: "Provision_Dev"
-    displayName: "Provision Dev resources"
+    displayName: "Provision Dev Environment Resources"
     pool:
       vmImage: 'ubuntu-latest'
     timeoutInMinutes: 0
