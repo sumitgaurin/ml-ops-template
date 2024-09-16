@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location": {
+        "value": "southindia"
+      },
+      "workspace": {
+        "value": "mlw-mldemo-dev-sind"
+      },
+      "storageAccount": {
+        "value": "stamldemodevsind001"
+      },
+      "keyvault": {
+        "value": "kv-mldemo-dev-sind"
+      },
+      "appInsights": {
+        "value": "api-mldemo-dev-sind"
+      },
+      "acr": {
+        "value": "acrmldemodevsind"
+      },
+      "sku": {
+        "value": "basic"
+      }
+    }
+  }
+  
