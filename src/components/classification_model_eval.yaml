@@ -28,4 +28,4 @@ command: >
   --test_data ${{inputs.test_data}}
   --outcome_label ${{inputs.outcome_label}}
   --output_path ${{outputs.results_file}}
-environment: azureml:<your-environment-name>
+environment: azureml:sklearn-dev310:latest

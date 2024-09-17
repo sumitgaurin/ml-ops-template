@@ -15,4 +15,4 @@ command: >
   python classification_model_selector.py
   --metrics-files ${{inputs.metrics_files}}
   --output-path ${{outputs.comparison_report}}
-environment: azureml:<your-environment-name>
+environment: azureml:sklearn-dev310:latest
