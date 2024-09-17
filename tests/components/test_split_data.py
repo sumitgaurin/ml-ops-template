@@ -1,7 +1,7 @@
 import unittest
 import os
 import pandas as pd
-from split_data import split_dataset
+from src.components.split_data import split_dataset
 
 class TestDatasetSplitting(unittest.TestCase):
 
@@ -18,12 +18,14 @@ class TestDatasetSplitting(unittest.TestCase):
         df.to_csv(self.dataset_path, index=False)
 
     def test_split_dataset(self):
-        # Call the dataset splitting function
-        split_dataset(self.dataset_path, self.train_output_dir, self.test_output_dir, split_ratio=0.6)
-
-        # Verify that train and test datasets are saved
+        # Define the expected output files
         train_file = os.path.join(self.train_output_dir, 'train_data.csv')
         test_file = os.path.join(self.test_output_dir, 'test_data.csv')
+
+        # Call the dataset splitting function
+        split_dataset(self.dataset_path, train_file, test_file, split_ratio=0.6)
+
+        # Verify that train and test datasets are saved
         self.assertTrue(os.path.exists(train_file))
         self.assertTrue(os.path.exists(test_file))
 

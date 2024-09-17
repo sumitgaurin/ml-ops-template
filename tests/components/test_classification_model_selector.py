@@ -1,7 +1,7 @@
 import unittest
 import os
 import json
-from classification_model_selector import compare_models
+from src.components.classification_model_selector import compare_models
 
 class TestModelSelector(unittest.TestCase):
 
@@ -31,19 +31,16 @@ class TestModelSelector(unittest.TestCase):
 
     def test_compare_models(self):
         # Call the model comparison function
-        compare_models([self.metrics_file_1, self.metrics_file_2], self.output_dir)
+        report_file = os.path.join(self.output_dir, 'comparison_report.txt')
+        compare_models([self.metrics_file_1, self.metrics_file_2], report_file)
 
         # Verify that the comparison report is saved
-        report_file = os.path.join(self.output_dir, 'comparison_report.txt')
         self.assertTrue(os.path.exists(report_file))
 
-        # Verify that the best model is saved
-        best_model_file = os.path.join(self.output_dir, 'best_model.txt')
-        self.assertTrue(os.path.exists(best_model_file))
-
         # Check the best model is gboost (since its accuracy is higher)
-        with open(best_model_file, 'r') as f:
+        with open(report_file, 'r') as f:
             best_model = f.read().strip()
+        print(best_model)
         self.assertIn('diabetes_gboost_model', best_model)
 
     def tearDown(self):

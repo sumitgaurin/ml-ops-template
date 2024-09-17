@@ -8,14 +8,11 @@ inputs:
     type: string[]
     description: List of paths to the metrics JSON files for comparison
 outputs:
-  best_model:
-    type: uri_file
-    description: The best model based on the comparison
   comparison_report:
     type: uri_file
     description: The comparison report generated
 command: >
   python classification_model_selector.py
   --metrics-files ${{inputs.metrics_files}}
-  --output-dir ${{outputs.best_model}}
+  --output-path ${{outputs.comparison_report}}
 environment: azureml:<your-environment-name>
