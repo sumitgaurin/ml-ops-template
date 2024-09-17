@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+name: sklearn-dev310
+version: "1"
+description: An environment for tasks such as regression, clustering, and classification with Scikit-learn. Contains the Azure ML SDK and additional python packages.
+tags:
+  python: 3.10
+  scikit-learn: 1.5.0
+  azureml-sdk: v1
+  os: linux
+image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20240908.v1
+conda_file: conda_dependencies.yaml

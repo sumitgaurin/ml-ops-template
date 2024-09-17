@@ -70,6 +70,8 @@ echo "Upgrading azure CLI..."
 pip install --upgrade azure-cli
 echo "Upgrading azureml SDK..."
 pip install --upgrade azureml-sdk
+echo "Upgrading azureml sdk v2..."
+pip install --upgrade azure-ai-ml
 
 # Install requirements
 SCRIPT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
