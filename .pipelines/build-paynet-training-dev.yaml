@@ -1,6 +1,6 @@
 parameters:
-  - name: conda_environment
-    displayName: "Name of the conda environment needed for python environment setup"
+  - name: python_environment
+    displayName: "Name of the python virtual environment"
     type: string
     default: "venv"
 
@@ -18,7 +18,7 @@ stages:
     timeoutInMinutes: 60
     steps:
     - script: |
-        echo "Workspace Name: '${{ parameters.conda_environment }}'"
+        echo "Python Environment Name: '${{ parameters.python_environment }}'"
       displayName: 'Verify Parameter Values'
 
     - task: UsePythonVersion@0
@@ -35,10 +35,9 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript:  |
           source ./.pipelines/pkg-requirements/install.sh $PYTHON_ENVIRONMENT
-        arguments: '${{ parameters.conda_environment }}'
         workingDirectory: '$(Build.SourcesDirectory)'
       env:
-        PYTHON_ENVIRONMENT: '${{ parameters.conda_environment }}'
+        PYTHON_ENVIRONMENT: '${{ parameters.python_environment }}'
 
     - task: AzureCLI@2
       inputs:
@@ -46,16 +45,15 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          conda env list
-
           echo 'Activating conda environment $PYTHON_ENVIRONMENT...'
+          source activate base
           conda activate $PYTHON_ENVIRONMENT
 
           echo 'Running unit test cases ...'
           pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/test-results.xml ./tests
         workingDirectory: '$(Build.SourcesDirectory)'
       env:
-        PYTHON_ENVIRONMENT: '${{ parameters.conda_environment }}'
+        PYTHON_ENVIRONMENT: '${{ parameters.python_environment }}'
 
     - task: PublishTestResults@2
       inputs:
