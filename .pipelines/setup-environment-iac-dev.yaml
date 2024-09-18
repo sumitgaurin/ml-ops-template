@@ -45,7 +45,7 @@ stages:
         csmFile: '$(Build.SourcesDirectory)/.pipelines/templates/arm-mlworkspace.json'
         csmParametersFile: '$(Build.SourcesDirectory)/.pipelines/templates/parameters-mlworkspace-dev.json'
         overrideParameters: |
-          workspaceName=${{ parameters.workspace_name }}
+          workspace=${{ parameters.workspace_name }}
           location=${{ parameters.location }}
         deploymentMode: 'Incremental'
 
