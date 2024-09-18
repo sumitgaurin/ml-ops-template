@@ -11,7 +11,7 @@ stages:
 - stage: "Build"
   displayName: 'Build stage for the branch'
   jobs:
-  - job: "Build and Test"
+  - job: "Build_and_Test"
     displayName: "Runs the build and unit test"
     pool:
       vmImage: 'ubuntu-latest'
