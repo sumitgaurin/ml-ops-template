@@ -44,9 +44,9 @@ stages:
         templateLocation: 'Linked artifact'
         csmFile: '$(Build.SourcesDirectory)/.pipelines/templates/arm-mlworkspace.json'
         csmParametersFile: '$(Build.SourcesDirectory)/.pipelines/templates/parameters-mlworkspace-dev.json'
-        overrideParameters: |
-          workspace=${{ parameters.workspace_name }}
-          location=${{ parameters.location }}
+        overrideParameters: >
+          -workspace "${{ parameters.workspace_name }}"
+          -location "${{ parameters.location }}"
         deploymentMode: 'Incremental'
 
     - task: AzureCLI@2
