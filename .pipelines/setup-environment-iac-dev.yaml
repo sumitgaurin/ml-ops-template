@@ -26,23 +26,29 @@ stages:
     displayName: "Provision Dev Environment Resources"
     pool:
       vmImage: 'ubuntu-latest'
-    timeoutInMinutes: 0
+    timeoutInMinutes: 60
     steps:
+    - script: |
+        echo "Workspace Name: '${{ parameters.workspace_name }}'"
+        echo "Resource Group Name: '${{ parameters.resource_group_name }}'"
+      displayName: 'Verify Parameter Values'
+
     - task: AzureResourceGroupDeployment@3
       displayName: 'Deploy ARM Template for Azure ML Service'
       inputs:
         deploymentScope: 'Resource Group'
         azureResourceManagerConnection: '$(AZURE_RM_SVC_CONNECTION_DEV)'
         action: 'Create Or Update Resource Group'
-        resourceGroupName: '${{ parameters.resource_group_name }}'
-        location: '${{ parameters.location }}'
+        resourceGroupName: '${{ parameters.resource_group_name }}'  # Corrected
+        location: '${{ parameters.location }}'                      # Corrected
         templateLocation: 'Linked artifact'
         csmFile: '$(Build.SourcesDirectory)/.pipelines/templates/arm-mlworkspace.json'
         csmParametersFile: '$(Build.SourcesDirectory)/.pipelines/templates/parameters-mlworkspace-dev.json'
-        overrideParameters: |
-                workspaceName=${{ parameters.workspace_name }}
-                location=${{ parameters.location }}
+        overrideParameters: >
+          -workspace "${{ parameters.workspace_name }}"
+          -location "${{ parameters.location }}"
         deploymentMode: 'Incremental'
+
     - task: AzureCLI@2
       displayName: 'Verify Deployment'
       inputs:
@@ -50,5 +56,10 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
+          echo "Adding azure ml extension..."
+          az extension add -n ml --allow-preview false
           echo "Verifying the deployment..."
-          az ml workspace show --name ${{ parameters.workspace_name }} --resource-group ${{ parameters.resource_group_name }}  
+          az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP_NAME
+      env:
+        WORKSPACE_NAME: '${{ parameters.workspace_name }}'
+        RESOURCE_GROUP_NAME: '${{ parameters.resource_group_name }}'

@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location": {
+        "value": "eastus"
+      },
+      "workspace": {
+        "value": "mlw-mlds-prod-eus"
+      },
+      "storageAccount": {
+        "value": "stamldsprodeus001"
+      },
+      "keyvault": {
+        "value": "kv-mlds-prod-eus"
+      },
+      "appInsights": {
+        "value": "api-mlds-prod-eus"
+      },
+      "acr": {
+        "value": "acrmldsprodeus"
+      },
+      "sku": {
+        "value": "basic"
+      }
+    }
+  }
+  

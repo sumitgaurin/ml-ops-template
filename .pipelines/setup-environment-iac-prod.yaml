@@ -1,0 +1,65 @@
+parameters:
+- name: workspace_name
+  displayName: "Azure ML Workspace Name"
+  type: string
+  default: "mlw-mlds-prod-eus"
+- name: resource_group_name
+  displayName: "Resource Group Name"
+  type: string
+  default: "rg-mlds-prod"
+- name: location
+  displayName: "Location"
+  type: string
+  default: "eastus"
+
+pr: none
+trigger: none
+
+variables:
+- group: mlops-deploy
+
+stages:
+- stage: 'DeployAzureML'
+  displayName: 'Deploy Azure Machine Learning Service'
+  jobs:
+  - job: "Provision_PROD"
+    displayName: "Provision Production Environment Resources"
+    pool:
+      vmImage: 'ubuntu-latest'
+    timeoutInMinutes: 60
+    steps:
+    - script: |
+        echo "Workspace Name: '${{ parameters.workspace_name }}'"
+        echo "Resource Group Name: '${{ parameters.resource_group_name }}'"
+      displayName: 'Verify Parameter Values'
+
+    - task: AzureResourceGroupDeployment@3
+      displayName: 'Deploy ARM Template for Azure ML Service'
+      inputs:
+        deploymentScope: 'Resource Group'
+        azureResourceManagerConnection: '$(AZURE_RM_SVC_CONNECTION_PROD)'
+        action: 'Create Or Update Resource Group'
+        resourceGroupName: '${{ parameters.resource_group_name }}'  # Corrected
+        location: '${{ parameters.location }}'                      # Corrected
+        templateLocation: 'Linked artifact'
+        csmFile: '$(Build.SourcesDirectory)/.pipelines/templates/arm-mlworkspace.json'
+        csmParametersFile: '$(Build.SourcesDirectory)/.pipelines/templates/parameters-mlworkspace-prod.json'
+        overrideParameters: >
+          -workspace "${{ parameters.workspace_name }}"
+          -location "${{ parameters.location }}"
+        deploymentMode: 'Incremental'
+
+    - task: AzureCLI@2
+      displayName: 'Verify Deployment'
+      inputs:
+        azureSubscription: '$(AZURE_RM_SVC_CONNECTION_PROD)'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Adding azure ml extension..."
+          az extension add -n ml --allow-preview false
+          echo "Verifying the deployment..."
+          az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP_NAME
+      env:
+        WORKSPACE_NAME: '${{ parameters.workspace_name }}'
+        RESOURCE_GROUP_NAME: '${{ parameters.resource_group_name }}'
