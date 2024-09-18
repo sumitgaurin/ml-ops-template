@@ -59,13 +59,12 @@
     "resources": [
       {
         "type": "Microsoft.Storage/storageAccounts",
-        "apiVersion": "2023-01-01",
         "name": "[variables('storageAccountName')]",
         "location": "[parameters('location')]",
         "sku": {
           "name": "[variables('storageAccountType')]"
         },
-        "kind": "StorageV2",
+        "kind": "Storage",
         "properties": {
           "encryption": {
             "services": {
@@ -83,7 +82,6 @@
       },
       {
         "type": "Microsoft.Storage/storageAccounts/blobServices",
-        "apiVersion": "2023-01-01",
         "name": "[concat(variables('storageAccountName'), '/default')]",
         "dependsOn": [
           "[resourceId('Microsoft.Storage/storageAccounts', concat(variables('storageAccountName')))]"
@@ -113,7 +111,6 @@
       },
       {
         "type": "Microsoft.Insights/components",
-        "apiVersion": "2021-03-08",
         "name": "[variables('applicationInsightsName')]",
         "location": "[if(or(equals(parameters('location'),'eastus2'),equals(parameters('location'),'westcentralus')),'southcentralus',parameters('location'))]",
         "kind": "web",
@@ -123,7 +120,6 @@
       },
       {
         "type": "Microsoft.ContainerRegistry/registries",
-        "apiVersion": "2023-05-01",
         "name": "[variables('containerRegistryName')]",
         "location": "[parameters('location')]",
         "sku": {
@@ -135,7 +131,6 @@
       },
       {
         "type": "Microsoft.MachineLearningServices/workspaces",
-        "apiVersion": "2023-06-01",
         "name": "[variables('amlWorkspaceName')]",
         "location": "[parameters('location')]",
         "dependsOn": [
@@ -161,7 +156,6 @@
       },
       {
         "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-        "apiVersion": "2023-01-01",
         "name": "[concat(variables('storageAccountName'), '/default/inputdata')]",
         "dependsOn": [
           "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccountName'), 'default')]",
@@ -173,7 +167,6 @@
       },
       {
         "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-        "apiVersion": "2023-01-01",
         "name": "[concat(variables('storageAccountName'), '/default/trainingdata')]",
         "dependsOn": [
           "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccountName'), 'default')]",
@@ -185,7 +178,6 @@
       },
       {
         "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-        "apiVersion": "2023-01-01",
         "name": "[concat(variables('storageAccountName'), '/default/testingdata')]",
         "dependsOn": [
           "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccountName'), 'default')]",
