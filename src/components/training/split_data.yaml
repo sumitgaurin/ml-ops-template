@@ -1,6 +1,6 @@
 # <component>
 name: split_data
-display_name: Dataset Splitter Component
+display_name: Dataset Splitter
 version: 1.0
 type: command
 inputs:

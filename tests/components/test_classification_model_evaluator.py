@@ -3,7 +3,7 @@ import os
 import json
 import pandas as pd
 from unittest import mock
-from src.components.classification_model_eval import evaluate_model
+from src.components.classification.model_evaluator import evaluate_model
 
 class TestEvaluateModel(unittest.TestCase):
 
@@ -28,7 +28,7 @@ class TestEvaluateModel(unittest.TestCase):
         self.joblib_mock = self.joblib_patch.start()
 
         # Mock the Model class at the module level in evaluate_model.py
-        self.model_patch = mock.patch('src.components.classification_model_eval.Model')
+        self.model_patch = mock.patch('src.components.classification.model_evaluator.Model')
         self.mock_model_class = self.model_patch.start()
 
         # Create a mock model instance

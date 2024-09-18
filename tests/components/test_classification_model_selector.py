@@ -1,7 +1,7 @@
 import unittest
 import os
 import json
-from src.components.classification_model_selector import compare_models
+from src.components.classification.model_selector import compare_models
 
 class TestModelSelector(unittest.TestCase):
 

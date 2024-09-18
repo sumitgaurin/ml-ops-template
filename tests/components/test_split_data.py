@@ -1,7 +1,7 @@
 import unittest
 import os
 import pandas as pd
-from src.components.split_data import split_dataset
+from src.components.training.split_data import split_dataset
 
 class TestDatasetSplitting(unittest.TestCase):
 

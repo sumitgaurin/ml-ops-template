@@ -1,6 +1,6 @@
 # <component>
 name: classification_model_selector
-display_name: Classification Model Selector Component
+display_name: Classification Model Selector
 version: 1.0
 type: command
 inputs:
@@ -12,7 +12,7 @@ outputs:
     type: uri_file
     description: The comparison report generated
 command: >
-  python classification_model_selector.py
+  python model_selector.py
   --metrics-files ${{inputs.metrics_files}}
   --output-path ${{outputs.comparison_report}}
 environment: azureml:sklearn-dev310:latest

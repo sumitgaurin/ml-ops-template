@@ -1,6 +1,6 @@
 # <component>
-name: classification_model_eval
-display_name: Classification Model Test Evaluation
+name: classification_model_evaluator
+display_name: Classification Model Evaluator
 version: 1.0
 type: command
 inputs:
@@ -22,7 +22,7 @@ outputs:
     type: uri_file
     description: Path to the file with model evaluation results
 command: >
-  python classification_model_eval.py
+  python model_evaluator.py
   --model_name ${{inputs.model_name}}
   --model_version ${{inputs.model_version}}
   --test_data ${{inputs.test_data}}

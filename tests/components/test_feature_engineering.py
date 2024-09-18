@@ -3,7 +3,7 @@ from unittest import mock
 import pandas as pd
 import os
 import shutil
-from src.components.feature_engineering import feature_engineering
+from src.components.preprocessing.feature_engineering import feature_engineering
 
 class TestFeatureEngineering(unittest.TestCase):
 
@@ -30,11 +30,11 @@ class TestFeatureEngineering(unittest.TestCase):
         self.mock_run.experiment.workspace = 'mock_workspace'
 
         # Patch the Run.get_context() method to return the mock run
-        self.run_patcher = mock.patch('src.components.feature_engineering.Run.get_context', return_value=self.mock_run)
+        self.run_patcher = mock.patch('src.components.preprocessing.feature_engineering.Run.get_context', return_value=self.mock_run)
         self.run_patcher.start()
 
         # Patch the Dataset.get_by_name() method to return the mock dataset
-        self.dataset_patcher = mock.patch('src.components.feature_engineering.Dataset.get_by_name', return_value=self.mock_dataset)
+        self.dataset_patcher = mock.patch('src.components.preprocessing.feature_engineering.Dataset.get_by_name', return_value=self.mock_dataset)
         self.dataset_patcher.start()
 
     def test_feature_engineering(self):
