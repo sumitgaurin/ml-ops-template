@@ -56,6 +56,8 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
+          echo "Adding azure ml extension..."
+          az extension add -n ml
           echo "Verifying the deployment..."
           az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP_NAME
       env:
