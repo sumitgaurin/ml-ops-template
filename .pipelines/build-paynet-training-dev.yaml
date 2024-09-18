@@ -7,45 +7,59 @@ parameters:
 pr: none
 trigger: none
 
-pool:
-  vmImage: ubuntu-latest
+stages:
+- stage: "Build"
+  displayName: 'Build stage for the branch'
+  jobs:
+  - job: "Build and Test"
+    displayName: "Runs the build and unit test"
+    pool:
+      vmImage: 'ubuntu-latest'
+    timeoutInMinutes: 60
+    steps:
+    - script: |
+        echo "Workspace Name: '${{ parameters.conda_environment }}'"
+      displayName: 'Verify Parameter Values'
 
-steps:
-- task: UsePythonVersion@0
-  displayName: 'Use Python 3.10.14'
-  inputs:
-    versionSpec: '3.10.14'
-    addToPath: true
-    architecture: 'x64'
+    - task: UsePythonVersion@0
+      displayName: 'Use Python 3.10'
+      inputs:
+        versionSpec: '3.10.x'
+        addToPath: true
+        architecture: 'x64'
 
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: 'SPN_DataScience'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript:  |
-      source ./.pipelines/pkg-requirements/install.sh $(PYTHON_ENVIRONMENT)
-    arguments: '${{ parameters.conda_environment }}'
-    workingDirectory: '$(Build.SourcesDirectory)'
-  env:
-    PYTHON_ENVIRONMENT: '${{ parameters.conda_environment }}'
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'SPN_DataScience'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript:  |
+          source ./.pipelines/pkg-requirements/install.sh $PYTHON_ENVIRONMENT
+        arguments: '${{ parameters.conda_environment }}'
+        workingDirectory: '$(Build.SourcesDirectory)'
+      env:
+        PYTHON_ENVIRONMENT: '${{ parameters.conda_environment }}'
 
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: 'SPN_DataScience'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      echo 'Activating conda environment $(PYTHON_ENVIRONMENT)...'
-      conda activate $(PYTHON_ENVIRONMENT)
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'SPN_DataScience'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          conda env list
 
-      echo 'Running unit test cases ...'
-      pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/test-results.xml .\tests
-    workingDirectory: '$(Build.SourcesDirectory)'
-  env:
-    PYTHON_ENVIRONMENT: '${{ parameters.conda_environment }}'
+          echo 'Activating conda environment $PYTHON_ENVIRONMENT...'
+          conda activate $PYTHON_ENVIRONMENT
 
-- task: PublishTestResults@2
-  inputs:
-    testResultsFormat: 'JUnit'
-    testResultsFiles: '**/TEST-*.xml'
+          echo 'Running unit test cases ...'
+          pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/test-results.xml ./tests
+        workingDirectory: '$(Build.SourcesDirectory)'
+      env:
+        PYTHON_ENVIRONMENT: '${{ parameters.conda_environment }}'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/TEST-*.xml'
+
+
