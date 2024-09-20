@@ -35,7 +35,7 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           echo 'Running unit test cases ...'
-          pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/test-results.xml ./tests
+          pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/TEST-results.xml ./tests
         workingDirectory: '$(Build.SourcesDirectory)'
 
     - task: PublishTestResults@2
