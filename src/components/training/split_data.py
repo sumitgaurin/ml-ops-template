@@ -1,9 +1,17 @@
 import argparse
 import os
 import pandas as pd
+import mlflow
+import mlflow.sklearn
 from sklearn.model_selection import train_test_split
 
+
 def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
+    # Start Logging
+    mlflow.start_run()
+    # enable autologging
+    mlflow.sklearn.autolog()
+
     # Load the dataset
     df = pd.read_csv(input_data_path)
 

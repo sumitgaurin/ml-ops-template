@@ -1,9 +1,13 @@
 import argparse
 import json
 import os
+import mlflow
 import pandas as pd
 
 def compare_models(metrics_file_paths, output_path):
+    # Start Logging
+    mlflow.start_run()
+
     # Load metrics from the provided JSON files
     metrics = {}
     for file_path in metrics_file_paths:
