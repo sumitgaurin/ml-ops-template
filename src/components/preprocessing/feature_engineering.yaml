@@ -1,6 +1,6 @@
 # <component>
-name: feature_engineering
-display_name: Feature Engineering Component
+name: paynet_feature_engineering
+display_name: Paynet - Feature Engineering Component
 version: 1.0
 type: command
 inputs:
