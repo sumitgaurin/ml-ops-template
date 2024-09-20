@@ -1,0 +1,39 @@
+pr: none
+trigger: none
+
+stages:
+- stage: "Build"
+  displayName: 'Build stage for the branch'
+  jobs:
+  - job: "Build_and_Test"
+    displayName: "Runs the build and unit test"
+    pool:
+      vmImage: 'ubuntu-latest'
+    timeoutInMinutes: 60
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python 3.10'
+      inputs:
+        versionSpec: '3.10.x'
+        addToPath: true
+        architecture: 'x64'
+    
+    - script: |
+        echo 'Running python dependency installation ...'
+        source ./.pipelines/pkg-requirements/install.sh
+      displayName: 'Install Python dependencies'
+      workingDirectory: '$(Build.SourcesDirectory)'
+
+    - script: |
+        echo 'Running unit test cases ...'
+        pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/TEST-results.xml ./tests
+      displayName: 'Run unit test cases'
+      workingDirectory: '$(Build.SourcesDirectory)'
+
+    - task: PublishTestResults@2
+      displayName: 'Collect unit test results'
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/TEST-*.xml'
+
+
