@@ -4,10 +4,6 @@
 echo "Current python version"
 python --version
 
-# Confirm the environment is active
-echo "$env_name environment python version"
-python --version
-
 # Upgrade pip
 echo "Upgrading pip..."
 python -m pip install --upgrade pip
