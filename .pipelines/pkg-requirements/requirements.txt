@@ -4,6 +4,7 @@ pandas==2.1.1              # Data manipulation
 numpy==1.23.5              # Numerical computations
 matplotlib==3.8.0          # Plotting and visualization
 seaborn==0.12.2            # Advanced visualization built on top of Matplotlib
+mlflow==2.13               # ML experiment tracking
 
 # Inference and boosting libraries
 inference-schema[numpy-support]==1.4.0   # For handling inference data validation with numpy support

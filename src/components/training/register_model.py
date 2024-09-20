@@ -1,7 +1,11 @@
 from azureml.core import Run, Model
 import argparse
+import mlflow
 
 def register_model(model_name, model_path, registered_model):
+    # Start Logging
+    mlflow.start_run()
+
     # Get the workspace from the run
     ws = Run.get_context().experiment.workspace
 

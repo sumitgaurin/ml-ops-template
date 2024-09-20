@@ -2,11 +2,15 @@ import argparse
 import json
 import os
 import pandas as pd
+import mlflow
 from sklearn.metrics import accuracy_score, recall_score
 from azureml.core import Model, Run
 import joblib
 
 def evaluate_model(model_name, model_version, test_data_path, outcome_label, output_path):
+    # Start Logging
+    mlflow.start_run()
+
     # Load the test data
     test_data = pd.read_csv(test_data_path)
     # Split the test data into features and labels
