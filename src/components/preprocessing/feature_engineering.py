@@ -1,41 +1,54 @@
 import argparse
 import os
+import mlflow
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 from azureml.core import Dataset, Run
 from src.components.helper import print_args
 
 def feature_engineering(dataset_name, output_path):
-    # Get the workspace and dataset
-    run = Run.get_context()
-    ws = run.experiment.workspace
-    dataset = Dataset.get_by_name(ws, name=dataset_name)
+    # Start Logging with mlflow using context manager
+    with mlflow.start_run():
+        # Get the workspace and dataset
+        run = Run.get_context()
+        ws = run.experiment.workspace
+        dataset = Dataset.get_by_name(ws, name=dataset_name)
 
-    # Load the dataset into a pandas DataFrame
-    df = dataset.to_pandas_dataframe()
-    
-    ########################################################################
-    # Placeholder for developer to write feature engineering based on the actual implementation
-    # Example: 
-    scaler = MinMaxScaler()
-    label_encoder = LabelEncoder()
+        # Load the dataset into a pandas DataFrame
+        df = dataset.to_pandas_dataframe()
+        
+        ########################################################################
+        # Placeholder for developer to write feature engineering based on the actual implementation
+        # Example: 
+        scaler = MinMaxScaler()
 
-    transformed_df = pd.DataFrame({
-        'feature1_scaled': scaler.fit_transform(df[['feature1']]).flatten(),
-        'feature2_encoded': label_encoder.fit_transform(df['feature2'])
-    })
+        transformed_df = pd.DataFrame({
+            'Pregnancies': df[['Pregnancies']],
+            'Glucose': scaler.fit_transform(df[['Glucose']]).flatten(),
+            'BloodPressure': scaler.fit_transform(df[['BloodPressure']]).flatten(),
+            'SkinThickness': scaler.fit_transform(df[['SkinThickness']]).flatten(),
+            'Insulin': scaler.fit_transform(df[['Insulin']]).flatten(),
+            'BMI': scaler.fit_transform(df[['BMI']]).flatten(),
+            'DiabetesPedigreeFunction': df[['DiabetesPedigreeFunction']],
+            'Age': df[['Pregnancies']],
+            'Outcome': df[['Outcome']]
+        })
 
-    # print the complete transformed DataFrame
-    print(transformed_df)    
-    ########################################################################
-    ########################################################################
+        # log mlflow metric
+        mlflow.log_metric("num_samples", transformed_df.shape[0])
+        mlflow.log_metric("num_features", transformed_df.shape[1] - 1)
 
-    # Save the transformed dataset to the output directory
-    os.makedirs(output_path, exist_ok=True)
-    file_path = os.path.join(output_path, "transformed_data.csv")
-    transformed_df.to_csv(file_path, index=False)
+        # print the sample of transformed DataFrame
+        print(transformed_df.head(3))    
+        ########################################################################
+        ########################################################################
 
-    print(f"Transformed dataset saved to {file_path}")
+        # Save the transformed dataset to the output directory
+        os.makedirs(output_path, exist_ok=True)
+        file_path = os.path.join(output_path, "transformed_data.csv")
+        transformed_df.to_csv(file_path, index=False)
+
+        print(f"Transformed dataset saved to {file_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

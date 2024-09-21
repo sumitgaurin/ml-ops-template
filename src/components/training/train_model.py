@@ -32,8 +32,9 @@ def train_model_paynet(model_name, training_data_path, outcome_label, model_vers
         X_train = df.drop(columns=[outcome_label])
         y_train = df[outcome_label]
         
-        # Initialize a Gradient Boosting Classifier (or any other classifier)
-        model = GradientBoostingClassifier()
+        model = GradientBoostingClassifier(
+            n_estimators=args.n_estimators, learning_rate=args.learning_rate
+        ).fit(X_train, y_train)
         
         # Train the model
         model.fit(X_train, y_train)    
@@ -61,6 +62,8 @@ if __name__ == "__main__":
     # Define arguments for the script
     parser.add_argument('--model_name', type=str, help='Name of the trained model')
     parser.add_argument('--training_data', type=str, help='Path to the training data CSV file')
+    parser.add_argument("--n_estimators", required=False, default=100, type=int, help='Defined the number of estimators used for the training')
+    parser.add_argument("--learning_rate", required=False, default=0.1, type=float, help='Defined the learning rate while training')
     parser.add_argument('--outcome_label', type=str, help='Name of the column with the outcome label')
     parser.add_argument('--model_version', type=str, help='Registerd model version with the workspace')
     parser.add_argument('--output_model', type=str, help='Path of the trained model file')
