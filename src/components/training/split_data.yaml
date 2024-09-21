@@ -24,4 +24,4 @@ command: >
   --train_output ${{outputs.train_data}}
   --test_output ${{outputs.test_data}}
   --split_ratio ${{inputs.split_ratio}}
-environment: azureml:sklearn-dev310:latest
+environment: azureml:sklearn-dev310@latest
