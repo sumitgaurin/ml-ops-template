@@ -1,93 +1,146 @@
 parameters:
-- name: workspace_name
-  displayName: "Azure ML Workspace Name"
-  type: string
-  default: "mlw-mldemo-dev-sind"
-- name: resource_group_name
-  displayName: "Resource Group Name"
-  type: string
-  default: "sgupta_sandbox"
+  - name: workspace_name
+    displayName: "Azure ML Workspace Name"
+    type: string
+    default: "mlw-mldemo-dev-sind"
+  - name: resource_group_name
+    displayName: "Resource Group Name"
+    type: string
+    default: "sgupta_sandbox"
+  - name: pipeline_definition
+    displayName: "Name of the pipeline definition yaml file"
+    type: string
+    default: "$(Build.SourcesDirectory)/src/pipelines/paynet_model_training.yaml"
+  - name: pipeline_parameter
+    displayName: "Name of the pipeline parameter json file"
+    type: string
+    default: "$(Build.SourcesDirectory)/src/pipelines/paynet_model_training_parameters.json"
+  - name: experiment_name
+    displayName: "Name of the experiment that will be run"
+    type: string
+    default: "Paynet_Credit_Score_Experiment"
 
 pr: none
 trigger: none
 
 stages:
-- stage: "Build"
-  displayName: 'Build stage for the branch'
-  jobs:
-  - job: "Build_and_Test"
-    displayName: "Runs the build and unit test"
-    pool:
-      vmImage: 'ubuntu-latest'
-    timeoutInMinutes: 60
-    steps:
-    - task: UsePythonVersion@0
-      displayName: 'Use Python 3.10'
-      inputs:
-        versionSpec: '3.10.x'
-        addToPath: true
-        architecture: 'x64'
+  - stage: "Build"
+    displayName: "Build stage for the branch"
+    jobs:
+      - job: "Build_and_Test"
+        displayName: "Runs the build and unit test"
+        pool:
+          vmImage: "ubuntu-latest"
+        timeoutInMinutes: 60
+        steps:
+          - task: UsePythonVersion@0
+            displayName: "Use Python 3.10"
+            inputs:
+              versionSpec: "3.10.x"
+              addToPath: true
+              architecture: "x64"
+
+          - script: |
+              echo 'Running python dependency installation ...'
+              source ./.pipelines/pkg-requirements/install.sh
+            displayName: "Install Python dependencies"
+            workingDirectory: "$(Build.SourcesDirectory)"
+
+          - script: |
+              echo 'Running unit test cases ...'
+              pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/TEST-results.xml ./tests
+            displayName: "Run unit test cases"
+            workingDirectory: "$(Build.SourcesDirectory)"
+
+          - task: PublishTestResults@2
+            displayName: "Collect unit test results"
+            inputs:
+              testResultsFormat: "JUnit"
+              testResultsFiles: "**/TEST-*.xml"
+
+  - stage: "Train"
+    displayName: "Run training for the paynet model"
+    jobs:
+      job: "Train_Paynet_Model"
+      displayName: "Train paynet model"
+      pool:
+        vmImage: "ubuntu-latest"
+      timeoutInMinutes: 60
+      steps:
+        - script: |
+            echo "Workspace Name: '${{ parameters.workspace_name }}'"
+            echo "Resource Group Name: '${{ parameters.resource_group_name }}'"
+            echo "Pipeline Definition File: '${{ parameters.pipeline_definition }}'"
+            echo "Pipeline Parameters File: '${{ parameters.pipeline_parameter }}'"
+            echo "Experiment Name: '${{ parameters.experiment_name }}'"
+          displayName: "Verify Parameter Values"
+
+        - task: AzureCLI@2
+          displayName: "Verify workspace connection"
+          inputs:
+            azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              echo "Adding azure ml extension..."
+              az extension add -n ml --allow-preview false
+
+              echo "Verifying the deployment..."
+              az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP_NAME
+          env:
+            WORKSPACE_NAME: "${{ parameters.workspace_name }}"
+            RESOURCE_GROUP_NAME: "${{ parameters.resource_group_name }}"
+
+        - task: AzureCLI@2
+          displayName: "Deploy ML pipeline components"
+          workingDirectory: "$(Build.SourcesDirectory)"
+          inputs:
+            azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              echo "Getting the subscription id for service connection"
+              subscription_id=$(az account show --query id --output tsv)
+              echo "Getting the source code directory for the task"
+              src_path="$(pwd)/src"
+
+              echo "Running register_ml_service_assets script..."
+              python -m ./src/scripts/register_ml_service_assets.py \
+                --subscription_id $subscription_id \
+                --resource_group $RESOURCE_GROUP_NAME \
+                --workspace_name $WORKSPACE_NAME \
+                --src_path $src_path
+          env:
+            WORKSPACE_NAME: "${{ parameters.workspace_name }}"
+            RESOURCE_GROUP_NAME: "${{ parameters.resource_group_name }}"
+          workingDirectory: "$(Build.SourcesDirectory)"
+
+        - task: AzureCLI@2
+          displayName: "Trigger model training pipeline"
+          workingDirectory: "$(Build.SourcesDirectory)"
+          inputs:
+            azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              echo "Getting the subscription id for service connection"
+              subscription_id=$(az account show --query id --output tsv)
+              echo "Getting the source code directory for the task"
+              src_path="$(pwd)/src"
+
+              echo "Running run_training_pipeline script..."
+              python -m ./src/scripts/register_ml_service_assets.py \
+                --subscription_id $subscription_id \
+                --resource_group $RESOURCE_GROUP_NAME \
+                --workspace_name $WORKSPACE_NAME \
+                --pipeline_definition_path $PIPELINE_DEFINITION \
+                --pipeline_parameter_path $PIPELINE_PARAMETERS \
+                --experiment_name $EXPERIMENT_NAME
+          env:
+            WORKSPACE_NAME: "${{ parameters.workspace_name }}"
+            RESOURCE_GROUP_NAME: "${{ parameters.resource_group_name }}"
+            PIPELINE_DEFINITION: "${{ parameters.pipeline_definition }}"
+            PIPELINE_PARAMETERS: "${{ parameters.pipeline_parameter }}"
+            EXPERIMENT_NAME: "${{ parameters.experiment_name }}"
+          workingDirectory: "$(Build.SourcesDirectory)"
     
-    - script: |
-        echo 'Running python dependency installation ...'
-        source ./.pipelines/pkg-requirements/install.sh
-      displayName: 'Install Python dependencies'
-      workingDirectory: '$(Build.SourcesDirectory)'
-
-    - script: |
-        echo 'Running unit test cases ...'
-        pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/TEST-results.xml ./tests
-      displayName: 'Run unit test cases'
-      workingDirectory: '$(Build.SourcesDirectory)'
-
-    - task: PublishTestResults@2
-      displayName: 'Collect unit test results'
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/TEST-*.xml'
-
-- stage: "Train"
-  displayName: 'Run training for the paynet model'
-  jobs:
-    job: "Train_Paynet_Model"
-    displayName: "Train paynet model"
-    pool:
-      vmImage: 'ubuntu-latest'
-    timeoutInMinutes: 600
-    steps:
-      - script: |
-          echo "Workspace Name: '${{ parameters.workspace_name }}'"
-          echo "Resource Group Name: '${{ parameters.resource_group_name }}'"
-        displayName: 'Verify Parameter Values'
-
-      - task: AzureCLI@2
-        displayName: 'Verify workspace connection'
-        inputs:
-          azureSubscription: '$(AZURE_RM_SVC_CONNECTION_DEV)'
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            echo "Adding azure ml extension..."
-            az extension add -n ml --allow-preview false
-            echo "Verifying the deployment..."
-            az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP_NAME
-        env:
-          WORKSPACE_NAME: '${{ parameters.workspace_name }}'
-          RESOURCE_GROUP_NAME: '${{ parameters.resource_group_name }}'
-
-      - task: AzureCLI@2
-        displayName: 'Deploy ML pipeline components'
-        workingDirectory: '$(Build.SourcesDirectory)'
-        inputs:
-          azureSubscription: '$(AZURE_RM_SVC_CONNECTION_DEV)'
-          scriptType: bash
-          scriptLocation: inlineScript
-          inlineScript: |
-            echo "Running register_ml_service_assets script..."
-            python -m ./src/scripts/register_ml_service_assets.py
-        env:
-          WORKSPACE_NAME: '${{ parameters.workspace_name }}'
-          RESOURCE_GROUP_NAME: '${{ parameters.resource_group_name }}'
-
-
-
