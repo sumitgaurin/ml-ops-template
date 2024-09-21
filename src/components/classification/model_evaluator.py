@@ -57,7 +57,9 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
             "accuracy": accuracy,
             "recall": recall,
             "precision": precision,
-            "f1_score": f1_score
+            "f1_score": f1_score,
+            "fpr": 1-precision,
+            "fnr": 1-recall
         }
 
         # Dump the final dictionary to a JSON string (or to a file)
