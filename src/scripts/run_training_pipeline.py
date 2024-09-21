@@ -3,7 +3,7 @@ from ast import parse
 import json
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient, load_job
-from src.components.helper import print_args
+#from src.components.helper import print_args
 
 def get_ml_client(args) -> MLClient:
     """
@@ -43,11 +43,9 @@ def main(args):
     print(f"Connecting to Azure ML Service...")
     ml_client = get_ml_client(args)
 
-    # initialize the training pipeline parameters
-    with open(args.training_parameter_path, "r") as json_file:
-        json_data = json.load(json_file)
     # Load the json data in dictionary format
-    pipeline_parameters = json.loads(json_data)
+    with open(args.pipeline_parameter_path, "r") as json_file:
+        pipeline_parameters = json.load(json_file)
     print("loaded pipeline parameters...")
     print(pipeline_parameters)
 
@@ -88,5 +86,5 @@ if __name__ == "__main__":
     
 
     args = parser.parse_args()
-    print_args(args)
+    #print_args(args)
     main(args)

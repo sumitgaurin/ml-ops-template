@@ -15,4 +15,4 @@ command: >
   python feature_engineering.py
   --dataset_name ${{inputs.dataset_name}}
   --output_path ${{outputs.transformed_data_path}}
-environment: azureml:sklearn-dev310:latest
+environment: azureml:sklearn-dev310@latest

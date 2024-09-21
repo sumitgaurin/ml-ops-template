@@ -2,7 +2,7 @@
     "dataset_name": "diabetes",
     "dataset_version": 2,
     "model_name": "paynet_diabetes",
-    "outcome_label": "Outcome",
-    "split_ratio": "0.6", 
+    "outcome_label_column_name": "Outcome",
+    "split_ratio": 0.6, 
     "model_selection_criteria": "balanced"
 }

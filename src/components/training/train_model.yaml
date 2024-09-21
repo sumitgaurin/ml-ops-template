@@ -25,6 +25,6 @@ command: >
   --model_name ${{inputs.model_name}}
   --training_data ${{inputs.training_data}}
   --outcome_label ${{inputs.outcome_label}}
-  --model_version ${{inputs.model_version}}
+  --model_version ${{outputs.model_version}}
   --output_model ${{outputs.output_model}}
-environment: azureml:sklearn-dev310:latest
+environment: azureml:sklearn-dev310@latest
