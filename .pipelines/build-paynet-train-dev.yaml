@@ -10,15 +10,15 @@ parameters:
   - name: pipeline_definition
     displayName: "Name of the pipeline definition yaml file"
     type: string
-    default: "$(Build.SourcesDirectory)/src/pipelines/paynet_model_training.yaml"
+    default: "./src/pipelines/paynet_model_training.yaml"
   - name: pipeline_parameter
     displayName: "Name of the pipeline parameter json file"
     type: string
-    default: "$(Build.SourcesDirectory)/src/pipelines/paynet_model_training_parameters.json"
+    default: "./src/pipelines/paynet_model_training_parameters.json"
   - name: experiment_name
     displayName: "Name of the experiment that will be run"
     type: string
-    default: "Paynet_Credit_Score_Experiment"
+    default: "Paynet_Diabetes_Score_Experiment"
 
 pr: none
 trigger: none
