@@ -13,6 +13,7 @@ outputs:
   model_version:
     type: string
     description: "Latest version of the registered model"
+code: .
 command: >
   python register_model.py
     --model_name {inputs.model_name}

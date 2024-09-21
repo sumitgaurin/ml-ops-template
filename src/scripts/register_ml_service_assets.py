@@ -138,4 +138,7 @@ if __name__ == "__main__":
     parser.add_argument('--src_path', type=str, help='The path to the source code folder')
 
     args = parser.parse_args()
+    print('Printing received arguments...')
+    for arg_name in vars(args):
+        print(f"{arg_name}: {getattr(args, arg_name)}")
     main(args)
