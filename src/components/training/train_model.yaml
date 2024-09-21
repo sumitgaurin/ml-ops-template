@@ -3,15 +3,23 @@ display_name: Paynet - Model Training Component
 version: 1
 type: command
 inputs:
+  model_name:
+    type: string
+    description: Name of the trained model
   training_data:
-    type: uri_file
-    description: Path to the training data CSV file
-outputs:
-  output_model:
     type: uri_folder
-    description: Directory where the trained model will be saved
+    description: Path to the train dataset in csv format
+outputs:
+  model_version:
+    type: string
+    description: Registerd model version with the workspace
+  output_model:
+    type: uri_file
+    description: Path of the trained model file
 command: >
   python train_model.py
+  --model_name ${{inputs.model_name}}
   --training_data ${{inputs.training_data}}
+  --model_version ${{inputs.model_version}}
   --output_model ${{outputs.output_model}}
 environment: azureml:sklearn-dev310:latest

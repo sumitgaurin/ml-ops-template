@@ -1,0 +1,87 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+description: Select best model trained with different learning rate
+experiment_name: Paynet_Credit_Score
+
+inputs:
+  dataset_name: paynet_source
+  model_name: paynet_model
+  outcome_label_column_name: label
+  split_ratio: 0.7
+  base_folder: "./paynet-${{creation_context.run_id}}"
+
+outputs: 
+  model_comparison_report:
+    mode: upload
+
+settings:
+  default_datastore: azureml:workspaceblobstore
+  default_compute: azureml:cpu-cluster
+  continue_on_step_failure: false
+
+jobs:
+  paynet_feature_engineering_step:
+    type: command
+    component: azureml:paynet_feature_engineering:1
+    inputs:
+      dataset_name: ${{inputs.dataset_name}}
+    outputs:
+      transformed_data_path:
+        type: uri_folder
+        mode: rw_mount
+        path: ${{inputs.base_folder}}/transformed_data
+
+  split_data_step:
+    type: command
+    component: azureml:split_data
+    inputs:
+      input_data: ${{jobs.paynet_feature_engineering_step.outputs.transformed_data_path}}
+      split_ratio: ${{inputs.split_ratio}}
+    outputs:
+      train_data:
+        type: uri_folder
+        mode: rw_mount
+        path: ${{variables.base_folder}}/train_data
+      test_data:
+        type: uri_folder
+        mode: rw_mount
+        path: ${{variables.base_folder}}/test_data
+
+  evaluate_latest_model_step:
+    type: component
+    component: azureml:classification_model_evaluator:1
+    inputs:
+      model_name: ${{inputs.model_name}}
+      model_version: latest
+      test_data: ${{jobs.split_data_step.outputs.test_data}}
+      outcome_label: ${{inputs.outcome_label_column_name}}
+    outputs:
+      evaluation_output:
+        type: uri_file
+        path: ${{variables.base_folder}}/evaluation_results/current_model.json
+
+  paynet_train_model_step:
+    type: command
+    component: azureml:paynet_train_model
+    inputs:
+      model_name: ${{inputs.model_name}}
+      training_data: ${{jobs.split_data_step.outputs.train_data}}
+    outputs:
+      model_version: latest
+      output_model:
+        type: uri_file
+        mode: rw_mount
+        path: ${{variables.base_folder}}/model/${{inputs.model_name}}.pkl
+
+  evaluate_trained_model_step:
+    type: component
+    component: azureml:classification_model_evaluator
+    inputs:
+      model_name: ${{inputs.model_name}}
+      model_version: ${{jobs.paynet_train_model_step.outputs.model_version}}
+      test_data: ${{jobs.split_data_step.outputs.test_data}}
+      outcome_label: ${{inputs.outcome_label_column_name}}
+    outputs:
+      evaluation_output:
+        type: uri_file
+        path: ${{variables.base_folder}}/evaluation_results/trained_model.json

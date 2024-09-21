@@ -30,10 +30,11 @@ def feature_engineering(dataset_name, output_path):
     ########################################################################
 
     # Save the transformed dataset to the output directory
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    transformed_df.to_csv(output_path, index=False)
+    os.makedirs(output_path, exist_ok=True)
+    file_path = os.path.join(output_path, "transformed_data.csv")
+    transformed_df.to_csv(file_path, index=False)
 
-    print(f"Transformed dataset saved to {output_path}")
+    print(f"Transformed dataset saved to {file_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
