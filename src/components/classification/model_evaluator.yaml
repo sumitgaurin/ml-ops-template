@@ -1,7 +1,7 @@
 # <component>
 name: classification_model_evaluator
 display_name: Classification Model Evaluator
-version: 1
+version: 2
 type: command
 inputs:
   model_name:

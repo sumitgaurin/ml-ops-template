@@ -1,7 +1,7 @@
 # <component>
 name: split_data
 display_name: Dataset Splitter
-version: 1
+version: 2
 type: command
 inputs:
   input_data:
