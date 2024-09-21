@@ -60,7 +60,7 @@ stages:
 
   - stage: "Train"
     displayName: "Run training for the paynet model"
-    depe
+    dependsOn: "Build"
     jobs:
       - job: "Train_Paynet_Model"
         displayName: "Train paynet model"
