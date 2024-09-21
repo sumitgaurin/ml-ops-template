@@ -18,6 +18,7 @@ outputs:
   test_data:
     type: uri_folder
     description: Path to the test dataset
+code: .
 command: >
   python split_data.py
   --input_data ${{inputs.input_data}}

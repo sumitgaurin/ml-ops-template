@@ -22,6 +22,7 @@ outputs:
   comparison_report:
     type: uri_file
     description: The comparison report generated
+code: .
 command: >
   python model_selector.py
   --model1_report_path ${{inputs.model1_report_path}}

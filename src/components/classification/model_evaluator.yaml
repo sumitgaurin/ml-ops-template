@@ -21,6 +21,7 @@ outputs:
   result_file:
     type: uri_file
     description: Path to the file with model evaluation results
+code: .
 command: >
   python model_evaluator.py
   --model_name ${{inputs.model_name}}
