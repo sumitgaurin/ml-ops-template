@@ -4,6 +4,8 @@ import os
 import mlflow
 import pandas as pd
 
+from src.components.helper import print_args
+
 def compare_models(metrics_file_paths, constraint, output_path):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
@@ -60,5 +62,6 @@ if __name__ == "__main__":
     parser.add_argument('--comparison_report', type=str, help='File to save the comparison report and best model')
 
     args = parser.parse_args()
+    print_args(args)
     report_files = [args.model1_report_path, args.model2_report_path]
     compare_models(report_files, args.constraint, args.output_path)

@@ -1,6 +1,6 @@
 import os
 
-def set_output(output_variable, output_value):
+def set_output(output_variable:str, output_value:any):
     """
     Sets the primitive output value  to the output variable of a component.
 
@@ -18,3 +18,14 @@ def set_output(output_variable, output_value):
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     with open(output_file, "w") as f:
         f.write(output_value)
+
+def print_args(args):
+    """
+    Prints the arguments once they are received by the components.
+
+    :param args: The arguments list as parsed by the argparse.ArgumentParser module 
+    :return: None
+    """
+    print('Printing received arguments...')
+    for arg_name in vars(args):
+        print(f"{arg_name}: {getattr(args, arg_name)}")
