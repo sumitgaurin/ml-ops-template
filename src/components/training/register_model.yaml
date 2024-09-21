@@ -18,4 +18,4 @@ command: >
     --model_name {inputs.model_name}
     --model_path {inputs.model_path}
     --registered_model {outputs.model_version}
-environment: azureml:sklearn-dev310:latest
+environment: azureml:sklearn-dev310@latest

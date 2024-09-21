@@ -28,4 +28,4 @@ command: >
   --model2_report_path ${{inputs.model2_report_path}}
   --constraint ${{inputs.constraint}}
   --comparison_report ${{outputs.comparison_report}}
-environment: azureml:sklearn-dev310:latest
+environment: azureml:sklearn-dev310@latest
