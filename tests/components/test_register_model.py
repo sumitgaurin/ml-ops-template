@@ -19,8 +19,8 @@ def test_register_model(mock_model_register, mock_run_get_context):
     # Call the function with test parameters
     model_name = "test_model"
     model_path = "test_path"
-    registered_model = ""
-    register_model(model_name, model_path, registered_model)
+    model_version = ""
+    register_model(model_name, model_path, model_version)
 
     # Assertions to ensure the function behaves as expected
     mock_run_get_context.assert_called_once()
@@ -39,15 +39,15 @@ def test_register_model_output(mock_model_register, mock_run_get_context):
 
     mock_model = MagicMock()
     mock_model.name = "test_model"
-    mock_model.version = "1"
+    mock_model.version = "10"
     mock_model_register.return_value = mock_model
 
     # Call the function with test parameters
     model_name = "test_model"
     model_path = "test_path"
-    registered_model = "test_model:1"
-    register_model(model_name, model_path, registered_model)
+    model_version = ""
+    register_model(model_name, model_path, model_version)
 
     # Check the registered_model output
-    expected_registered_model = f"{mock_model.name}:{mock_model.version}"
-    assert registered_model == expected_registered_model
+    expected_model_version = "10"
+    assert model_version == expected_model_version
