@@ -1,11 +1,10 @@
 import argparse
-import glob
 import json
 import os
 import mlflow
 import pandas as pd
 
-def compare_models(metrics_file_paths, output_path):
+def compare_models(metrics_file_paths, constraint, output_path):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # Load metrics from the provided JSON files
@@ -18,8 +17,14 @@ def compare_models(metrics_file_paths, output_path):
         metrics_df = pd.DataFrame(metrics).T
         print("Metrics DataFrame:\n", metrics_df)
 
-        # Find the model with the highest accuracy
-        best_model_row = metrics_df.loc[metrics_df['f1_score'].idxmax()]
+        # Find the best model by constraint
+        if constraint == 'minimize_fp':
+            best_model_row = metrics_df.loc[metrics_df['fpr'].idxmin()]
+        elif constraint == 'minimize_fn':
+            best_model_row = metrics_df.loc[metrics_df['fnr'].idxmin()]
+        else:
+            best_model_row = metrics_df.loc[metrics_df['f1_score'].idxmax()]
+
         # Get the model name
         best_model = best_model_row['model_name']
         best_model_version = best_model_row['model_version']
@@ -46,9 +51,14 @@ def compare_models(metrics_file_paths, output_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--metric_report_path', type=str, nargs='+', help='Path to the folder containing evaluation results of different models')
-    parser.add_argument('--output-path', type=str, help='File to save the comparison report and best model')
+    #--model1_report_path ${{inputs.model1_report_path}}
+    #model2_report_path ${{inputs.model2_report_path}}
+    #constraint ${{inputs.constraint}}
+    parser.add_argument('--model1_report_path', type=str, nargs='+', help='Path to the evaluation result file of first model')
+    parser.add_argument('--model2_report_path', type=str, nargs='+', help='Path to the evaluation result file of second model')
+    parser.add_argument('--constraint', type=str, nargs='+', help='The criteria on which the best model selection is done')
+    parser.add_argument('--comparison_report', type=str, help='File to save the comparison report and best model')
 
     args = parser.parse_args()
-    report_files = glob.glob(os.path.join(args.metrics_files, '*.json'))
-    compare_models(report_files, args.output_path)
+    report_files = [args.model1_report_path, args.model2_report_path]
+    compare_models(report_files, args.constraint, args.output_path)

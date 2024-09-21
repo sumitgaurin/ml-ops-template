@@ -1,18 +1,31 @@
 # <component>
 name: classification_model_selector
 display_name: Classification Model Selector
+description: Compares metric output of two classification models and selects the best one
 version: 1
 type: command
 inputs:
-  metric_report_path:
-    type: uri_folder
-    description: Path to the folder containing evaluation results of different models
+  model1_report_path:
+    type: uri_file
+    description: Path to the evaluation result file of first model
+  model2_report_path:
+    type: uri_file
+    description: Path to the evaluation result file of second model
+  constraint:
+    type: string
+    description: The criteria on which the best model selection is done
+    enum:
+      - balanced
+      - minimize_fp
+      - minimize_fn
 outputs:
   comparison_report:
     type: uri_file
     description: The comparison report generated
 command: >
   python model_selector.py
-  --metric_report_path ${{inputs.metric_report_path}}
-  --output-path ${{outputs.comparison_report}}
+  --model1_report_path ${{inputs.model1_report_path}}
+  --model2_report_path ${{inputs.model2_report_path}}
+  --constraint ${{inputs.constraint}}
+  --comparison_report ${{outputs.comparison_report}}
 environment: azureml:sklearn-dev310:latest
