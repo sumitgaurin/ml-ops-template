@@ -1,6 +1,6 @@
 name: register_model
 display_name: Register Model
-version: 1
+version: 2
 type: command
 inputs:
   model_name:
