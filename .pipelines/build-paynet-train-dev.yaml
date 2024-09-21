@@ -94,11 +94,11 @@ stages:
 
           - task: AzureCLI@2
             displayName: "Deploy ML pipeline components"
-            workingDirectory: "$(Build.SourcesDirectory)"
             inputs:
               azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
               scriptType: bash
               scriptLocation: inlineScript
+              workingDirectory: "$(Build.SourcesDirectory)"
               inlineScript: |
                 echo "Getting the subscription id for service connection"
                 subscription_id=$(az account show --query id --output tsv)
@@ -117,11 +117,11 @@ stages:
 
           - task: AzureCLI@2
             displayName: "Trigger model training pipeline"
-            workingDirectory: "$(Build.SourcesDirectory)"
             inputs:
               azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
               scriptType: bash
               scriptLocation: inlineScript
+              workingDirectory: "$(Build.SourcesDirectory)"
               inlineScript: |
                 echo "Getting the subscription id for service connection"
                 subscription_id=$(az account show --query id --output tsv)
