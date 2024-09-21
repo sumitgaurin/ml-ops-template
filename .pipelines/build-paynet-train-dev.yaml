@@ -60,6 +60,7 @@ stages:
 
   - stage: "Train"
     displayName: "Run training for the paynet model"
+    depe
     jobs:
       - job: "Train_Paynet_Model"
         displayName: "Train paynet model"
@@ -128,7 +129,7 @@ stages:
                 src_path="$(pwd)/src"
 
                 echo "Running run_training_pipeline script..."
-                python -m ./src/scripts/register_ml_service_assets.py \
+                python -m ./src/scripts/run_training_pipeline.py \
                   --subscription_id $subscription_id \
                   --resource_group $RESOURCE_GROUP_NAME \
                   --workspace_name $WORKSPACE_NAME \
@@ -141,4 +142,3 @@ stages:
               PIPELINE_DEFINITION: "${{ parameters.pipeline_definition }}"
               PIPELINE_PARAMETERS: "${{ parameters.pipeline_parameter }}"
               EXPERIMENT_NAME: "${{ parameters.experiment_name }}"
-    
