@@ -2,26 +2,6 @@ import argparse
 import os
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient, load_environment, load_component
-from azure.core.exceptions import ResourceNotFoundError
-
-def asset_exists(asset_collection, asset_name, asset_version)->bool:
-    """
-    Check if the asset already exists in the workspace.
-
-    :param asset_collection: The collection of assets to check
-    :param asset_name: The name of the asset to check
-    :param asset_version: The version of the asset to check
-    :return: If it does, return True, else return False. If there is an error, print the error and return False.
-    """ 
-    try:
-        _ = asset_collection.get(name=asset_name, version=asset_version)
-        print(f"Asset '{asset_name}' with version '{asset_version}' exists.")
-        return True
-    except ResourceNotFoundError:
-        print(f"Asset '{asset_name}' with version '{asset_version}' does not exist.")
-    except Exception as ex:
-        print(f"An unexpected error occurred: {ex}")
-    return False
 
 def register_environments(ml_client, src_path, ignore_list=[]):
     """
@@ -51,12 +31,12 @@ def register_environments(ml_client, src_path, ignore_list=[]):
 
         # Load the definition
         env_asset = load_environment(source=definition_path)
-        # check if the asset already exists
-        if not asset_exists(ml_client.environments, env_asset.name, env_asset.version):
-            print(f"Registering environment {env_asset.name} ...")
-            # Create or update the environment in the workspace
-            ml_client.environments.create_or_update(env_asset)
-            print(f"Environment '{env_asset.name}' registered in workspace.")
+
+        print(f"Registering environment {env_asset.name} ...")
+        # Create or update the environment in the workspace
+        ml_client.environments.create_or_update(env_asset)
+        print(f"Environment '{env_asset.name}' registered in workspace.")
+            
 
 def register_components(ml_client, src_path, ignore_list=[]):
     """
@@ -79,12 +59,11 @@ def register_components(ml_client, src_path, ignore_list=[]):
                 comp_path = os.path.join(root, file)
                 # Load the component
                 comp_asset = load_component(source=comp_path)
-                # check if the asset already exists
-                if not asset_exists(ml_client.components, comp_asset.name, comp_asset.version):
-                    print(f"Registering component {comp_asset.name} ...")
-                    # Create or update the component in the workspace
-                    ml_client.components.create_or_update(comp_asset)
-                    print(f"Component '{comp_asset.name}' registered in workspace.")
+                
+                print(f"Registering component {comp_asset.name} ...")
+                # Create or update the component in the workspace
+                ml_client.components.create_or_update(comp_asset)
+                print(f"Component '{comp_asset.name}' registered in workspace.")
 
 def get_ml_client(args) -> MLClient:
     """
@@ -142,3 +121,5 @@ if __name__ == "__main__":
     for arg_name in vars(args):
         print(f"{arg_name}: {getattr(args, arg_name)}")
     main(args)
+
+
