@@ -5,8 +5,8 @@ version: 1
 type: command
 inputs:
   input_data:
-    type: uri_file
-    description: Path to the input dataset file
+    type: uri_folder
+    description: Path to the input dataset
   split_ratio:
     type: number
     description: Ratio to split the dataset into training and testing (default is 0.7)

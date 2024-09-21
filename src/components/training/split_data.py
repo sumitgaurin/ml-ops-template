@@ -1,4 +1,5 @@
 import argparse
+import glob
 import os
 import pandas as pd
 import mlflow
@@ -12,8 +13,15 @@ def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
         # enable autologging
         mlflow.sklearn.autolog()
 
-        # Load the dataset
-        df = pd.read_csv(input_data_path)
+        # Load the training data from the CSV files
+        print('Loacating training feature dataset files...')
+        csv_files = glob.glob(os.path.join(input_data_path, '*.csv'))
+        print(f'Found {csv_files.count} files in training feature dataset')
+
+        print('Loading training feature dataset files...')
+        df = pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
+        print(f'Loaded files in dataframe with schema:')
+        print(df.info())
 
         # Split the dataset
         train_df, test_df = train_test_split(df, test_size=(1 - split_ratio), random_state=42)

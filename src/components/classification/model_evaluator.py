@@ -1,24 +1,41 @@
 import argparse
+import glob
 import json
 import os
 import pandas as pd
 import mlflow
-from sklearn.metrics import accuracy_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 from azureml.core import Model, Run
 import joblib
 
 def evaluate_model(model_name, model_version, test_data_path, outcome_label, output_path):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
-        # Load the test data
-        test_data = pd.read_csv(test_data_path)
+        # Load the training data from the CSV files
+        print('Loacating test dataset files...')
+        csv_files = glob.glob(os.path.join(test_data_path, '*.csv'))
+        print(f'Found {csv_files.count} files in test dataset')
+
+        print('Loading test dataset files...')
+        df = pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
+        print(f'Loaded files in dataframe with schema:')
+        print(df.info())
+
         # Split the test data into features and labels
-        X_test = test_data.drop(outcome_label, axis=1)
-        y_test = test_data[outcome_label]
+        X_test = df.drop(outcome_label, axis=1)
+        y_test = df[outcome_label]
 
         # Load the model from Azure ML
         ws = Run.get_context().experiment.workspace
-        model = Model(ws, name=model_name, version=model_version)
+        
+        # Get the latest model if version is not provided
+        # otherwise get the specific version
+        if model_version is None or len(model_version) == 0:
+            model = Model(ws, name=model_name)
+        else:
+            model = Model(ws, name=model_name, version=model_version)
+        
+        # download the model
         model_path = model.download(exist_ok=True)
         
         # Load the model from the downloaded file
@@ -30,6 +47,7 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
         # Calculate accuracy
         accuracy = accuracy_score(y_test, y_pred)
         recall = recall_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred)
         f1_score = 2 * (accuracy * recall) / (accuracy + recall)
         
         # Prepare the results
@@ -38,6 +56,7 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
             "model_version": model_version,
             "accuracy": accuracy,
             "recall": recall,
+            "precision": precision,
             "f1_score": f1_score
         }
 
