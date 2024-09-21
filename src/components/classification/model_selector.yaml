@@ -4,15 +4,15 @@ display_name: Classification Model Selector
 version: 1
 type: command
 inputs:
-  metrics_files:
-    type: string[]
-    description: List of paths to the metrics JSON files for comparison
+  metric_report_path:
+    type: uri_folder
+    description: Path to the folder containing evaluation results of different models
 outputs:
   comparison_report:
     type: uri_file
     description: The comparison report generated
 command: >
   python model_selector.py
-  --metrics-files ${{inputs.metrics_files}}
+  --metric_report_path ${{inputs.metric_report_path}}
   --output-path ${{outputs.comparison_report}}
 environment: azureml:sklearn-dev310:latest

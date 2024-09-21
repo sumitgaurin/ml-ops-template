@@ -1,4 +1,5 @@
 import argparse
+import glob
 import json
 import os
 import mlflow
@@ -18,9 +19,10 @@ def compare_models(metrics_file_paths, output_path):
         print("Metrics DataFrame:\n", metrics_df)
 
         # Find the model with the highest accuracy
-        best_model_row = metrics_df.loc[metrics_df['accuracy'].idxmax()]
+        best_model_row = metrics_df.loc[metrics_df['f1_score'].idxmax()]
         # Get the model name
         best_model = best_model_row['model_name']
+        best_model_version = best_model_row['model_version']
 
         # Generate a comparison report
         # Convert the dataframe to a list of dictionaries for the models
@@ -29,7 +31,8 @@ def compare_models(metrics_file_paths, output_path):
         # Prepare the final dictionary
         final_output = {
             "models": models_list,
-            "best_model": best_model
+            "best_model": best_model,
+            "best_model_version": best_model_version
         }
 
         # Dump the final dictionary to a JSON string (or to a file)
@@ -43,8 +46,9 @@ def compare_models(metrics_file_paths, output_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--metrics-files', type=str, nargs='+', help='List of paths to the metrics JSON files for comparison')
+    parser.add_argument('--metric_report_path', type=str, nargs='+', help='Path to the folder containing evaluation results of different models')
     parser.add_argument('--output-path', type=str, help='File to save the comparison report and best model')
 
     args = parser.parse_args()
-    compare_models(args.metrics_files, args.output_path)
+    report_files = glob.glob(os.path.join(args.metrics_files, '*.json'))
+    compare_models(report_files, args.output_path)
