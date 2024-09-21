@@ -113,7 +113,6 @@ stages:
           env:
             WORKSPACE_NAME: "${{ parameters.workspace_name }}"
             RESOURCE_GROUP_NAME: "${{ parameters.resource_group_name }}"
-          workingDirectory: "$(Build.SourcesDirectory)"
 
         - task: AzureCLI@2
           displayName: "Trigger model training pipeline"
@@ -142,5 +141,4 @@ stages:
             PIPELINE_DEFINITION: "${{ parameters.pipeline_definition }}"
             PIPELINE_PARAMETERS: "${{ parameters.pipeline_parameter }}"
             EXPERIMENT_NAME: "${{ parameters.experiment_name }}"
-          workingDirectory: "$(Build.SourcesDirectory)"
     
