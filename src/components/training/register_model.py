@@ -3,20 +3,19 @@ import argparse
 import mlflow
 
 def register_model(model_name, model_path, model_version):
-    # Start Logging
-    mlflow.start_run()
+    # Start Logging with mlflow using context manager
+    with mlflow.start_run():
+        # Get the workspace from the run
+        ws = Run.get_context().experiment.workspace
 
-    # Get the workspace from the run
-    ws = Run.get_context().experiment.workspace
-
-    # Register the model
-    model = Model.register(workspace=ws,
-                           model_name=model_name,
-                           model_path=model_path)
-    
-    # se the registered_model output variable
-    model_version = model.version
-    print(f"Model {model_name} registered successfully with version {model_version}")
+        # Register the model
+        model = Model.register(workspace=ws,
+                            model_name=model_name,
+                            model_path=model_path)
+        
+        # se the registered_model output variable
+        model_version = model.version
+        print(f"Model {model_name} registered successfully with version {model_version}")
 
 
 if __name__ == "__main__":

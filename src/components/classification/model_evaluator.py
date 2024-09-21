@@ -8,50 +8,49 @@ from azureml.core import Model, Run
 import joblib
 
 def evaluate_model(model_name, model_version, test_data_path, outcome_label, output_path):
-    # Start Logging
-    mlflow.start_run()
+    # Start Logging with mlflow using context manager
+    with mlflow.start_run():
+        # Load the test data
+        test_data = pd.read_csv(test_data_path)
+        # Split the test data into features and labels
+        X_test = test_data.drop(outcome_label, axis=1)
+        y_test = test_data[outcome_label]
 
-    # Load the test data
-    test_data = pd.read_csv(test_data_path)
-    # Split the test data into features and labels
-    X_test = test_data.drop(outcome_label, axis=1)
-    y_test = test_data[outcome_label]
+        # Load the model from Azure ML
+        ws = Run.get_context().experiment.workspace
+        model = Model(ws, name=model_name, version=model_version)
+        model_path = model.download(exist_ok=True)
+        
+        # Load the model from the downloaded file
+        trained_model = joblib.load(model_path)
 
-    # Load the model from Azure ML
-    ws = Run.get_context().experiment.workspace
-    model = Model(ws, name=model_name, version=model_version)
-    model_path = model.download(exist_ok=True)
-    
-    # Load the model from the downloaded file
-    trained_model = joblib.load(model_path)
+        # Predict on the test data
+        y_pred = trained_model.predict(X_test)
 
-    # Predict on the test data
-    y_pred = trained_model.predict(X_test)
+        # Calculate accuracy
+        accuracy = accuracy_score(y_test, y_pred)
+        recall = recall_score(y_test, y_pred)
+        f1_score = 2 * (accuracy * recall) / (accuracy + recall)
+        
+        # Prepare the results
+        metrics = {
+            "model_name": model_name,
+            "model_version": model_version,
+            "accuracy": accuracy,
+            "recall": recall,
+            "f1_score": f1_score
+        }
 
-    # Calculate accuracy
-    accuracy = accuracy_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    f1_score = 2 * (accuracy * recall) / (accuracy + recall)
-    
-    # Prepare the results
-    metrics = {
-        "model_name": model_name,
-        "model_version": model_version,
-        "accuracy": accuracy,
-        "recall": recall,
-        "f1_score": f1_score
-    }
+        # Dump the final dictionary to a JSON string (or to a file)
+        json_output = json.dumps(metrics, indent=4)
 
-    # Dump the final dictionary to a JSON string (or to a file)
-    json_output = json.dumps(metrics, indent=4)
+        # Save metrics to a JSON file for future comparison
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, 'w') as report_file:
+            report_file.write(json_output)
 
-    # Save metrics to a JSON file for future comparison
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, 'w') as report_file:
-        report_file.write(json_output)
-
-    print(f"Evaluation results:\n{json_output}")
-    print(f"Results saved to {output_path}")
+        print(f"Evaluation results:\n{json_output}")
+        print(f"Results saved to {output_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

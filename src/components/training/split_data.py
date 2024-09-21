@@ -7,26 +7,26 @@ from sklearn.model_selection import train_test_split
 
 
 def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
-    # Start Logging
-    mlflow.start_run()
-    # enable autologging
-    mlflow.sklearn.autolog()
+    # Start Logging with mlflow using context manager
+    with mlflow.start_run():
+        # enable autologging
+        mlflow.sklearn.autolog()
 
-    # Load the dataset
-    df = pd.read_csv(input_data_path)
+        # Load the dataset
+        df = pd.read_csv(input_data_path)
 
-    # Split the dataset
-    train_df, test_df = train_test_split(df, test_size=(1 - split_ratio), random_state=42)
+        # Split the dataset
+        train_df, test_df = train_test_split(df, test_size=(1 - split_ratio), random_state=42)
 
-    # Create directories if they don't exist
-    os.makedirs(os.path.dirname(train_path), exist_ok=True)
-    os.makedirs(os.path.dirname(test_path), exist_ok=True)
+        # Create directories if they don't exist
+        os.makedirs(os.path.dirname(train_path), exist_ok=True)
+        os.makedirs(os.path.dirname(test_path), exist_ok=True)
 
-    train_df.to_csv(train_path, index=False)
-    test_df.to_csv(test_path, index=False)
+        train_df.to_csv(train_path, index=False)
+        test_df.to_csv(test_path, index=False)
 
-    print(f"Train dataset saved to {train_path}")
-    print(f"Test dataset saved to {test_path}")
+        print(f"Train dataset saved to {train_path}")
+        print(f"Test dataset saved to {test_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
