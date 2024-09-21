@@ -30,7 +30,7 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
         
         # Get the latest model if version is not provided
         # otherwise get the specific version
-        if model_version is None or len(model_version) == 0:
+        if model_version is None or len(model_version) == 0 or model_version == 'latest':
             model = Model(ws, name=model_name)
         else:
             model = Model(ws, name=model_name, version=model_version)
