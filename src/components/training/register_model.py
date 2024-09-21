@@ -2,6 +2,8 @@ from azureml.core import Run, Model
 import argparse
 import mlflow
 
+from src.components.helper import print_args
+
 def register_model(model_name, model_path, model_version):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
@@ -25,5 +27,5 @@ if __name__ == "__main__":
     parser.add_argument("--model_version", type=str, required=True, help="Latest version of the registered model")
 
     args = parser.parse_args()
-    
+    print_args(args)
     register_model(args.model_name, args.model_path, args.model_version)

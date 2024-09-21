@@ -8,6 +8,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score
 from azureml.core import Model, Run
 import joblib
 
+from src.components.helper import print_args
+
 def evaluate_model(model_name, model_version, test_data_path, outcome_label, output_path):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
@@ -81,4 +83,5 @@ if __name__ == "__main__":
     parser.add_argument('--output_path', type=str, help='Path to save the results JSON file')
 
     args = parser.parse_args()
+    print_args(args)
     evaluate_model(args.model_name, args.model_version, args.test_data, args.output_path)
