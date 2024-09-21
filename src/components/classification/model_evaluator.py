@@ -7,6 +7,7 @@ import mlflow
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from azureml.core import Model, Run
 import joblib
+from azure.core.exceptions import ResourceNotFoundError
 
 from src.components.helper import print_args
 
@@ -30,39 +31,59 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
         # Load the model from Azure ML
         ws = Run.get_context().experiment.workspace
         
-        # Get the latest model if version is not provided
-        # otherwise get the specific version
-        if model_version is None or len(model_version) == 0 or model_version == 'latest':
-            model = Model(ws, name=model_name)
-        else:
-            model = Model(ws, name=model_name, version=model_version)
-        
-        # download the model
-        model_path = model.download(exist_ok=True)
-        
-        # Load the model from the downloaded file
-        trained_model = joblib.load(model_path)
-
-        # Predict on the test data
-        y_pred = trained_model.predict(X_test)
-
-        # Calculate accuracy
-        accuracy = accuracy_score(y_test, y_pred)
-        recall = recall_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred)
-        f1_score = 2 * (accuracy * recall) / (accuracy + recall)
-        
-        # Prepare the results
+        # Get the model and if not found then send the zero-metric
+        model = None
         metrics = {
-            "model_name": model_name,
-            "model_version": model_version,
-            "accuracy": accuracy,
-            "recall": recall,
-            "precision": precision,
-            "f1_score": f1_score,
-            "fpr": 1-precision,
-            "fnr": 1-recall
+            "model_name": 0,
+            "model_version": 0,
+            "accuracy": 0,
+            "recall": 0,
+            "precision": 0,
+            "f1_score": 0,
+            "fpr": 1,
+            "fnr": 1
         }
+
+        try:
+            # Get the latest model if version is not provided
+            # otherwise get the specific version
+            if model_version is None or len(model_version) == 0 or model_version == 'latest':
+                model = Model(ws, name=model_name)
+            else:
+                model = Model(ws, name=model_name, version=model_version)
+            print(f"Model '{model_name}' with version '{model_version}' exists.")
+            return True
+        except ResourceNotFoundError:
+            print(f"Model '{model_name}' with version '{model_version}' does not exists.")        
+        
+        # Run model evaluation only if the model for the specified version is found
+        if model is not None:
+            # download the model
+            model_path = model.download(exist_ok=True)
+            
+            # Load the model from the downloaded file
+            trained_model = joblib.load(model_path)
+
+            # Predict on the test data
+            y_pred = trained_model.predict(X_test)
+
+            # Calculate accuracy
+            accuracy = accuracy_score(y_test, y_pred)
+            recall = recall_score(y_test, y_pred)
+            precision = precision_score(y_test, y_pred)
+            f1_score = 2 * (accuracy * recall) / (accuracy + recall)
+            
+            # Prepare the results
+            metrics = {
+                "model_name": model_name,
+                "model_version": model_version,
+                "accuracy": accuracy,
+                "recall": recall,
+                "precision": precision,
+                "f1_score": f1_score,
+                "fpr": 1-precision,
+                "fnr": 1-recall
+            }
 
         # Dump the final dictionary to a JSON string (or to a file)
         json_output = json.dumps(metrics, indent=4)
