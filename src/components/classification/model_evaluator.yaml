@@ -18,7 +18,7 @@ inputs:
     description: Name of the column with the outcome label
     default: outcome
 outputs:
-  results_file:
+  result_file:
     type: uri_file
     description: Path to the file with model evaluation results
 command: >
@@ -27,5 +27,5 @@ command: >
   --model_version ${{inputs.model_version}}
   --test_data ${{inputs.test_data}}
   --outcome_label ${{inputs.outcome_label}}
-  --output_path ${{outputs.results_file}}
+  --output_path ${{outputs.result_file}}
 environment: azureml:sklearn-dev310:latest
