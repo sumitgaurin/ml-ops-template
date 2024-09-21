@@ -1,7 +1,7 @@
 # <component>
 name: classification_model_selector
 display_name: Classification Model Selector
-version: 1.0
+version: 1
 type: command
 inputs:
   metrics_files:
