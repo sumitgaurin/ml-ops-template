@@ -1,6 +1,6 @@
 name: paynet_train_model
 display_name: Paynet - Model Training Component
-version: 1
+version: 2
 type: command
 inputs:
   model_name:
@@ -20,6 +20,7 @@ outputs:
   output_model:
     type: uri_file
     description: Path of the trained model file
+code: .
 command: >
   python train_model.py
   --model_name ${{inputs.model_name}}

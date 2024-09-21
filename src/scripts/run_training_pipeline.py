@@ -1,5 +1,6 @@
 import argparse
 from ast import parse
+from datetime import datetime
 import json
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient, load_job
@@ -61,6 +62,13 @@ def main(args):
         source=args.pipeline_definition_path,
         params_override=transform_pipeline_parameters
     )
+
+    # Modify the name of the job
+    # If you are trying to create a new job, use a different name. If you are trying to update an existing job, 
+    # the existing job's Jobs cannot be changed. 
+    # Only description, tags, displayName, properties, and isArchived can be updated.
+    dt_stamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    pipeline_job.name = f"{pipeline_job.name}_{dt_stamp}"
     print("loaded pipeline definition with parameter override...")
     print(pipeline_job)
 
