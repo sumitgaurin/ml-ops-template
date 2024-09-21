@@ -9,6 +9,10 @@ inputs:
   training_data:
     type: uri_folder
     description: Path to the train dataset in csv format
+  outcome_label:
+    type: string
+    description: Name of the column with the outcome label
+    default: outcome
 outputs:
   model_version:
     type: string
@@ -20,6 +24,7 @@ command: >
   python train_model.py
   --model_name ${{inputs.model_name}}
   --training_data ${{inputs.training_data}}
+  --outcome_label ${{inputs.outcome_label}}
   --model_version ${{inputs.model_version}}
   --output_model ${{outputs.output_model}}
 environment: azureml:sklearn-dev310:latest

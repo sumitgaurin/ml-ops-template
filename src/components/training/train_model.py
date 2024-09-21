@@ -7,8 +7,9 @@ import pandas as pd
 import mlflow
 import mlflow.sklearn
 from sklearn.ensemble import GradientBoostingClassifier
+from src.components.helper import print_args, set_output
 
-def train_model_paynet(model_name, training_data_path, model_version, output_model_path):
+def train_model_paynet(model_name, training_data_path, outcome_label, model_version, output_model_path):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # enable autologging
@@ -28,8 +29,8 @@ def train_model_paynet(model_name, training_data_path, model_version, output_mod
         # Placeholder for developer to write feature engineering based on the actual implementation
         # Example: 
         # Assume the target column is named 'label' and the rest are features
-        X_train = df.drop(columns=['label'])
-        y_train = df['label']
+        X_train = df.drop(columns=[outcome_label])
+        y_train = df[outcome_label]
         
         # Initialize a Gradient Boosting Classifier (or any other classifier)
         model = GradientBoostingClassifier()
@@ -49,7 +50,8 @@ def train_model_paynet(model_name, training_data_path, model_version, output_mod
         latest_model = Model.register(workspace=ws,
                             model_name=model_name,
                             model_path=output_model_path)
-        model_version = latest_model.version
+        # Set the value of moel version to the output variable
+        set_output(model_version, latest_model.version)
 
         print(f"Model {model_name}:{model_version} saved at {output_model_path}")
 
@@ -59,10 +61,10 @@ if __name__ == "__main__":
     # Define arguments for the script
     parser.add_argument('--model_name', type=str, help='Name of the trained model')
     parser.add_argument('--training_data', type=str, help='Path to the training data CSV file')
+    parser.add_argument('--outcome_label', type=str, help='Name of the column with the outcome label')
     parser.add_argument('--model_version', type=str, help='Registerd model version with the workspace')
     parser.add_argument('--output_model', type=str, help='Path of the trained model file')
     
     args = parser.parse_args()
-
-    # Train the model and save it to the output directory
-    train_model_paynet(args.model_name, args.training_data, args.model_version, args.output_model)
+    print_args(args)
+    train_model_paynet(args.model_name, args.training_data, args.outcome_label, args.model_version, args.output_model)

@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from azureml.core import Dataset, Run
+from src.components.helper import print_args
 
 def feature_engineering(dataset_name, output_path):
     # Get the workspace and dataset
@@ -40,6 +41,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_name', type=str, help='Name of the input dataset in Azure ML')
     parser.add_argument('--output_path', type=str, help='File path to save the transformed dataset')
+    
     args = parser.parse_args()
-
+    print_args(args)
     feature_engineering(args.dataset_name, args.output_path)
