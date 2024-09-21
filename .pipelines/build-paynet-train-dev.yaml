@@ -23,6 +23,9 @@ parameters:
 pr: none
 trigger: none
 
+variables:
+- group: mlops-deploy
+
 stages:
   - stage: "Build"
     displayName: "Build stage for the branch"
