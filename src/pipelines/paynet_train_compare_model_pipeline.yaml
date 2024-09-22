@@ -9,19 +9,24 @@ tags:
   area: credit_scoring
   purpose: training
   environment: development
+  base_model: paynet_diabetes@latest
 
 # Inputs should be provided by the caller
 # default values will cause the pipeline to fail
 inputs:
-  dataset_name: xx
-  dataset_version: xx
-  model_name: xx
   outcome_label_column_name: xx
   split_ratio: xx
   model_selection_criteria: xx
 
 outputs:
+  model_eval_report:
+    type: uri_file
+    mode: upload
   model_comparison_report:
+    type: uri_file
+    mode: upload
+  trained_model:
+    type: mlflow_model
     mode: upload
 
 settings:
@@ -32,45 +37,54 @@ settings:
 jobs:
   paynet_feature_engineering_step:
     type: command
-    component: azureml:paynet_feature_engineering@latest
+    component: ./../components/preprocessing/feature_engineering.yaml
     inputs:
-      dataset_name: ${{parent.inputs.dataset_name}}
+      dataset_path:
+        type: uri_file
+        path: azureml:diabetes@latest
+        mode: ro_mount
 
   split_data_step:
     type: command
-    component: azureml:split_data@latest
+    component: ./../components/training/split_data.yaml
     inputs:
       input_data: ${{parent.jobs.paynet_feature_engineering_step.outputs.transformed_data_path}}
       split_ratio: ${{parent.inputs.split_ratio}}
 
   evaluate_latest_model_step:
     type: command
-    component: azureml:classification_model_evaluator@latest
+    component: ./../components/classification/model_evaluator.yaml
     inputs:
-      model_name: ${{parent.inputs.model_name}}
-      model_version: latest
-      test_data: ${{parent.jobs.split_data_step.outputs.test_data}}
+      model_id: reference
       outcome_label: ${{parent.inputs.outcome_label_column_name}}
+      model_path: 
+        type: mlflow_model
+        path: azureml:paynet_diabetes@latest
+      test_data: ${{parent.jobs.split_data_step.outputs.test_data}}
 
   paynet_train_model_step:
     type: command
-    component: azureml:paynet_train_model@latest
+    component: ./../components/training/train_model.yaml
     inputs:
-      model_name: ${{parent.inputs.model_name}}
       training_data: ${{parent.jobs.split_data_step.outputs.train_data}}
+      outcome_label: ${{parent.inputs.outcome_label_column_name}}
+    outputs:
+      output_model: ${{parent.outputs.trained_model}}
 
   evaluate_trained_model_step:
     type: command
-    component: azureml:classification_model_evaluator@latest
+    component: ./../components/classification/model_evaluator.yaml
     inputs:
-      model_name: ${{parent.inputs.model_name}}
-      model_version: ${{parent.jobs.paynet_train_model_step.outputs.model_version}}
-      test_data: ${{parent.jobs.split_data_step.outputs.test_data}}
+      model_id: trained
       outcome_label: ${{parent.inputs.outcome_label_column_name}}
+      model_path: ${{parent.jobs.paynet_train_model_step.outputs.output_model}}
+      test_data: ${{parent.jobs.split_data_step.outputs.test_data}}
+    outputs:
+      result_file: ${{parent.outputs.model_eval_report}}
 
   compare_current_trained_model_step:
     type: command
-    component: azureml:classification_model_selector@latest
+    component: ./../components/classification/model_selector.yaml
     inputs:
       model1_report_path: ${{parent.jobs.evaluate_latest_model_step.outputs.result_file}}
       model2_report_path: ${{parent.jobs.evaluate_trained_model_step.outputs.result_file}}

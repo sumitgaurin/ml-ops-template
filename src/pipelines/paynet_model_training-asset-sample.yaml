@@ -1,0 +1,80 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+name: paynet_model_training_pipeline
+display_name: Paynet Model Training Pipeline
+description: Paynet model training pipeline which compares the model with previous version and generates a report
+experiment_name: Paynet_Credit_Score_Experiment
+tags:
+  project: paynet
+  area: credit_scoring
+  purpose: training
+  environment: development
+
+# Inputs should be provided by the caller
+# default values will cause the pipeline to fail
+inputs:
+  model_name: xx
+  outcome_label_column_name: xx
+  split_ratio: xx
+  model_selection_criteria: xx
+
+outputs:
+  model_comparison_report:
+    mode: upload
+
+settings:
+  default_datastore: azureml:workspaceblobstore
+  default_compute: azureml:serverless
+  continue_on_step_failure: false
+
+jobs:
+  paynet_feature_engineering_step:
+    type: command
+    component: azureml:paynet_feature_engineering@latest
+    inputs:
+      dataset_path:
+        type: uri_file
+        path: azureml:diabetes@latest
+        mode: ro_mount
+
+  split_data_step:
+    type: command
+    component: azureml:split_data@latest
+    inputs:
+      input_data: ${{parent.jobs.paynet_feature_engineering_step.outputs.transformed_data_path}}
+      split_ratio: ${{parent.inputs.split_ratio}}
+
+  evaluate_latest_model_step:
+    type: command
+    component: azureml:classification_model_evaluator@latest
+    inputs:
+      model_name: ${{parent.inputs.model_name}}
+      model_version: latest
+      test_data: ${{parent.jobs.split_data_step.outputs.test_data}}
+      outcome_label: ${{parent.inputs.outcome_label_column_name}}
+
+  paynet_train_model_step:
+    type: command
+    component: azureml:paynet_train_model@latest
+    inputs:
+      model_name: ${{parent.inputs.model_name}}
+      training_data: ${{parent.jobs.split_data_step.outputs.train_data}}
+
+  evaluate_trained_model_step:
+    type: command
+    component: azureml:classification_model_evaluator@latest
+    inputs:
+      model_name: ${{parent.inputs.model_name}}
+      model_version: ${{parent.jobs.paynet_train_model_step.outputs.model_version}}
+      test_data: ${{parent.jobs.split_data_step.outputs.test_data}}
+      outcome_label: ${{parent.inputs.outcome_label_column_name}}
+
+  compare_current_trained_model_step:
+    type: command
+    component: azureml:classification_model_selector@latest
+    inputs:
+      model1_report_path: ${{parent.jobs.evaluate_latest_model_step.outputs.result_file}}
+      model2_report_path: ${{parent.jobs.evaluate_trained_model_step.outputs.result_file}}
+      constraint: ${{parent.inputs.model_selection_criteria}}
+    outputs:
+      comparison_report: ${{parent.outputs.model_comparison_report}}

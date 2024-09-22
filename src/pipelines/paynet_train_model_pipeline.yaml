@@ -1,0 +1,68 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+name: paynet_model_training_pipeline
+display_name: Paynet Model Training Pipeline
+description: Paynet model training pipeline which trains a new model
+experiment_name: Paynet_Credit_Score_Experiment
+tags:
+  project: paynet
+  area: credit_scoring
+  purpose: training
+  environment: development
+  dataset: diabetes@latest
+
+# Inputs should be provided by the caller
+# default values will cause the pipeline to fail
+inputs:
+  outcome_label_column_name: xx
+  split_ratio: xx
+
+outputs:
+  model_eval_report:
+    type: uri_file
+    mode: upload
+  trained_model:
+    type: mlflow_model
+    mode: upload
+
+settings:
+  default_datastore: azureml:workspaceblobstore
+  default_compute: azureml:serverless
+  continue_on_step_failure: false
+
+jobs:
+  paynet_feature_engineering_step:
+    type: command
+    component: ./../components/preprocessing/feature_engineering.yaml
+    inputs:
+      dataset_path:
+        type: uri_file
+        path: azureml:diabetes@latest
+        mode: ro_mount
+
+  split_data_step:
+    type: command
+    component: ./../components/training/split_data.yaml
+    inputs:
+      input_data: ${{parent.jobs.paynet_feature_engineering_step.outputs.transformed_data_path}}
+      split_ratio: ${{parent.inputs.split_ratio}}
+
+  paynet_train_model_step:
+    type: command
+    component: ./../components/training/train_model.yaml
+    inputs:
+      training_data: ${{parent.jobs.split_data_step.outputs.train_data}}
+      outcome_label: ${{parent.inputs.outcome_label_column_name}}
+    outputs:
+      output_model: ${{parent.outputs.trained_model}}
+
+  evaluate_trained_model_step:
+    type: command
+    component: ./../components/classification/model_evaluator.yaml
+    inputs:
+      model_id: trained
+      outcome_label: ${{parent.inputs.outcome_label_column_name}}
+      model_path: ${{parent.jobs.paynet_train_model_step.outputs.output_model}}
+      test_data: ${{parent.jobs.split_data_step.outputs.test_data}}
+    outputs:
+      result_file: ${{parent.outputs.model_eval_report}}

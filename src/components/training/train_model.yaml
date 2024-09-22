@@ -1,31 +1,23 @@
 name: paynet_train_model
 display_name: Paynet - Model Training Component
-version: 2
+description: Trains the model based on the training dataset
+version: 6
 type: command
 inputs:
-  model_name:
-    type: string
-    description: Name of the trained model
   training_data:
     type: uri_folder
     description: Path to the train dataset in csv format
   outcome_label:
     type: string
     description: Name of the column with the outcome label
-    default: outcome
 outputs:
-  model_version:
-    type: string
-    description: Registerd model version with the workspace
   output_model:
-    type: uri_file
-    description: Path of the trained model file
+    type: mlflow_model
+    description: Path of the trained model folder
 code: .
 command: >
   python train_model.py
-  --model_name ${{inputs.model_name}}
   --training_data ${{inputs.training_data}}
   --outcome_label ${{inputs.outcome_label}}
-  --model_version ${{outputs.model_version}}
   --output_model ${{outputs.output_model}}
 environment: azureml:sklearn-dev310@latest

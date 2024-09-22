@@ -1,12 +1,13 @@
 # <component>
 name: paynet_feature_engineering
 display_name: Paynet - Feature Engineering Component
-version: 4
+description: Takes the input dataset and performs cleansing and transformation for the experiment
+version: 7
 type: command
 inputs:
-  dataset_name:
-    type: string
-    description: Name of the dataset in Azure ML
+  dataset_path:
+    type: uri_folder
+    description: Path to the input raw dataset
 outputs:
   transformed_data_path:
     type: uri_folder
@@ -14,6 +15,6 @@ outputs:
 code: .
 command: >
   python feature_engineering.py
-  --dataset_name ${{inputs.dataset_name}}
+  --dataset_path ${{inputs.dataset_path}}
   --output_path ${{outputs.transformed_data_path}}
 environment: azureml:sklearn-dev310@latest

@@ -1,15 +1,12 @@
 import argparse
 import os
-from azureml.core import Run, Model
-import joblib
 import glob
 import pandas as pd
 import mlflow
 import mlflow.sklearn
 from sklearn.ensemble import GradientBoostingClassifier
-from src.components.helper import print_args, set_output
 
-def train_model_paynet(model_name, training_data_path, outcome_label, model_version, output_model_path):
+def train_model_paynet(training_data_path, outcome_label, output_model_path):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # enable autologging
@@ -18,7 +15,7 @@ def train_model_paynet(model_name, training_data_path, outcome_label, model_vers
         # Load the training data from the CSV files
         print('Loacating training dataset files...')
         csv_files = glob.glob(os.path.join(training_data_path, '*.csv'))
-        print(f'Found {csv_files.count} files in training dataset')
+        print(f'Found {len(csv_files)} files in training dataset')
 
         print('Loading training dataset files...')
         df = pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
@@ -42,32 +39,28 @@ def train_model_paynet(model_name, training_data_path, outcome_label, model_vers
         ########################################################################
 
         # Save the model to the output directory
-        os.makedirs(os.path.dirname(output_model_path), exist_ok=True)
-        joblib.dump(model, output_model_path)
+        os.makedirs(output_model_path, exist_ok=True)
+        # Saving the model to a file
+        mlflow.sklearn.save_model(
+            sk_model=model,
+            path=output_model_path,
+            serialization_format=mlflow.sklearn.SERIALIZATION_FORMAT_CLOUDPICKLE
+        )
 
-        # Get the workspace from the run
-        ws = Run.get_context().experiment.workspace
-        # Register the model with the workspace
-        latest_model = Model.register(workspace=ws,
-                            model_name=model_name,
-                            model_path=output_model_path)
-        # Set the value of moel version to the output variable
-        set_output(model_version, latest_model.version)
-
-        print(f"Model {model_name}:{model_version} saved at {output_model_path}")
+        print(f"SKLEARN model saved at {output_model_path} in CLOUDPICKLE format.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    
+    parser = argparse.ArgumentParser()    
     # Define arguments for the script
-    parser.add_argument('--model_name', type=str, help='Name of the trained model')
     parser.add_argument('--training_data', type=str, help='Path to the training data CSV file')
     parser.add_argument("--n_estimators", required=False, default=100, type=int, help='Defined the number of estimators used for the training')
     parser.add_argument("--learning_rate", required=False, default=0.1, type=float, help='Defined the learning rate while training')
     parser.add_argument('--outcome_label', type=str, help='Name of the column with the outcome label')
-    parser.add_argument('--model_version', type=str, help='Registerd model version with the workspace')
-    parser.add_argument('--output_model', type=str, help='Path of the trained model file')
+    parser.add_argument('--output_model', type=str, help='Path of the trained model folder')
     
     args = parser.parse_args()
-    print_args(args)
-    train_model_paynet(args.model_name, args.training_data, args.outcome_label, args.model_version, args.output_model)
+    print('Printing received arguments...')
+    for arg_name in vars(args):
+        print(f"{arg_name}: {getattr(args, arg_name)}")
+
+    train_model_paynet(args.training_data, args.outcome_label, args.output_model)
