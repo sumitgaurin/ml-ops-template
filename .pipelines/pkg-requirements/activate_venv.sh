@@ -1,5 +1,21 @@
 #!/bin/bash
 
+############################################################################################
+#	FOR SETTING UP DEVELOPMENT MACHINE
+#	NOT TO BE USED IN DEVOPS PIPELINES
+#	
+#	Description: Checks if Anaconda is installed then creates a conda environment otherwise
+#				 creates a virtual environment. Default name for the environment is 'venv'.
+#	Parameters: Environment Name (positional)
+#
+#	Example:
+#	~/data-science$ source ./.pipelines/pkg-requirements/activate_venv.sh
+#	(venv) ~/data-science$ source ./.pipelines/pkg-requirements/install.sh
+#
+#	~/data-science$ source ./.pipelines/pkg-requirements/activate_venv.sh my_env
+#	(my_env) ~/data-science$ source ./.pipelines/pkg-requirements/install.sh
+############################################################################################
+
 # Function to activate a conda environment
 create_and_activate_conda_env() {
 	source "$(conda info --base)/etc/profile.d/conda.sh"
