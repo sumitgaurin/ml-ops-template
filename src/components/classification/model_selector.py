@@ -15,8 +15,13 @@ def compare_models(metrics_file_paths, constraint, output_path):
 
         # Convert the metrics dictionary to a DataFrame for comparison
         metrics_df = pd.DataFrame(metrics).T
-        print("Metrics DataFrame:\n", metrics_df)
+        metrics_df.reset_index(level=0, inplace=True)
+        metrics_df['f1_score'] = metrics_df['f1_score'].astype(float)
+        metrics_df['fpr'] = metrics_df['fpr'].astype(float)
+        metrics_df['fnr'] = metrics_df['fnr'].astype(float)
 
+        print("Metrics DataFrame:\n", metrics_df.info())
+        
         # Find the best model by constraint
         if constraint == 'minimize_fp':
             best_model_row = metrics_df.loc[metrics_df['fpr'].idxmin()]
@@ -26,8 +31,7 @@ def compare_models(metrics_file_paths, constraint, output_path):
             best_model_row = metrics_df.loc[metrics_df['f1_score'].idxmax()]
 
         # Get the model name
-        best_model = best_model_row['model_name']
-        best_model_version = best_model_row['model_version']
+        best_model = best_model_row['model_id']
 
         # Generate a comparison report
         # Convert the dataframe to a list of dictionaries for the models
@@ -36,8 +40,7 @@ def compare_models(metrics_file_paths, constraint, output_path):
         # Prepare the final dictionary
         final_output = {
             "models": models_list,
-            "best_model": best_model,
-            "best_model_version": best_model_version
+            "best_model_id": best_model
         }
 
         # Dump the final dictionary to a JSON string (or to a file)
@@ -51,12 +54,9 @@ def compare_models(metrics_file_paths, constraint, output_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    #--model1_report_path ${{inputs.model1_report_path}}
-    #model2_report_path ${{inputs.model2_report_path}}
-    #constraint ${{inputs.constraint}}
-    parser.add_argument('--model1_report_path', type=str, nargs='+', help='Path to the evaluation result file of first model')
-    parser.add_argument('--model2_report_path', type=str, nargs='+', help='Path to the evaluation result file of second model')
-    parser.add_argument('--constraint', type=str, nargs='+', help='The criteria on which the best model selection is done')
+    parser.add_argument('--model1_report_path', type=str, help='Path to the evaluation result file of first model')
+    parser.add_argument('--model2_report_path', type=str, help='Path to the evaluation result file of second model')
+    parser.add_argument('--constraint', type=str, help='The criteria on which the best model selection is done')
     parser.add_argument('--comparison_report', type=str, help='File to save the comparison report and best model')
 
     args = parser.parse_args()
@@ -65,4 +65,4 @@ if __name__ == "__main__":
         print(f"{arg_name}: {getattr(args, arg_name)}")
 
     report_files = [args.model1_report_path, args.model2_report_path]
-    compare_models(report_files, args.constraint, args.output_path)
+    compare_models(report_files, args.constraint, args.comparison_report)
