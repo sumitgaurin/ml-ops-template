@@ -24,9 +24,9 @@ outputs:
 code: .
 command: >
   python model_evaluator.py
-  --model_name ${{inputs.model_name}}
-  --model_version ${{inputs.model_version}}
+  --model_id ${{inputs.model_id}}
+  --model_path ${{inputs.model_path}}
   --test_data ${{inputs.test_data}}
   --outcome_label ${{inputs.outcome_label}}
-  --output_path ${{outputs.result_file}}
+  --result_file ${{outputs.result_file}}
 environment: azureml:sklearn-dev310@latest

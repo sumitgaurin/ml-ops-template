@@ -7,7 +7,7 @@ import mlflow
 from mlflow.sklearn import load_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
-def evaluate_model(model_id, model_path, test_data_path, outcome_label, output_path):
+def evaluate_model(model_id, model_path, test_data_path, outcome_label, result_file):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # Load the training data from the CSV files
@@ -64,12 +64,12 @@ def evaluate_model(model_id, model_path, test_data_path, outcome_label, output_p
         json_output = json.dumps(metrics, indent=4)
 
         # Save metrics to a JSON file for future comparison
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w') as report_file:
+        os.makedirs(os.path.dirname(result_file), exist_ok=True)
+        with open(result_file, 'w') as report_file:
             report_file.write(json_output)
 
         print(f"Evaluation results:\n{json_output}")
-        print(f"Results saved to {output_path}")
+        print(f"Results saved to {result_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -77,11 +77,11 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', type=str, help='Path containing the trained model')    
     parser.add_argument('--test_data', type=str, help='Path to the test data CSV file')
     parser.add_argument('--outcome_label', type=str, help='Name of the column with the outcome label')
-    parser.add_argument('--output_path', type=str, help='Path to save the results JSON file')
+    parser.add_argument('--result_file', type=str, help='Path to save the results JSON file')
 
     args = parser.parse_args()
     print('Printing received arguments...')
     for arg_name in vars(args):
         print(f"{arg_name}: {getattr(args, arg_name)}")
         
-    evaluate_model(args.model_id, args.model_path, args.test_data, args.outcome_label, args.output_path)
+    evaluate_model(args.model_id, args.model_path, args.test_data, args.outcome_label, args.result_file)
