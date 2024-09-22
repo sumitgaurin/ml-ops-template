@@ -6,9 +6,6 @@ import mlflow
 import mlflow.sklearn
 from sklearn.model_selection import train_test_split
 
-from src.components.helper import print_args
-
-
 def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
@@ -46,5 +43,8 @@ if __name__ == "__main__":
     parser.add_argument('--split_ratio', type=float, default=0.7, help='Train-test split ratio, default is 0.7')
 
     args = parser.parse_args()
-    print_args(args)
+    print('Printing received arguments...')
+    for arg_name in vars(args):
+        print(f"{arg_name}: {getattr(args, arg_name)}")
+
     split_dataset(args.input_data, args.train_output, args.test_output, args.split_ratio)
