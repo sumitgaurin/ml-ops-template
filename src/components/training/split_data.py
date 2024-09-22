@@ -31,11 +31,11 @@ def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
 
         train_file = os.path.join(train_path, "train_data.csv")
         train_df.to_csv(train_file, index=False)
-        test_file = os.path.join(train_path, "test_data.csv")
-        test_df.to_csv(test_file, index=False)
+        print(f"Train dataset with {train_df.size} saved to {train_path}")
 
-        print(f"Train dataset saved to {train_path}")
-        print(f"Test dataset saved to {test_path}")
+        test_file = os.path.join(test_path, "test_data.csv")
+        test_df.to_csv(test_file, index=False)        
+        print(f"Test dataset with {test_df.size} saved to {test_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
