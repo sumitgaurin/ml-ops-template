@@ -1,7 +1,8 @@
 # <component>
 name: classification_model_evaluator
 display_name: Classification Model Evaluator
-version: 2
+description: Runs the model agains test dataset and generates the classification model metric results
+version: 4
 type: command
 inputs:
   model_name:
