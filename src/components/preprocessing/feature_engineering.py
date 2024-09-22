@@ -4,7 +4,6 @@ import mlflow
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from azureml.core import Dataset, Run
-from src.components.helper import print_args
 
 def feature_engineering(dataset_name, output_path):
     # Start Logging with mlflow using context manager
@@ -56,5 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_path', type=str, help='File path to save the transformed dataset')
     
     args = parser.parse_args()
-    print_args(args)
+    print('Printing received arguments...')
+    for arg_name in vars(args):
+        print(f"{arg_name}: {getattr(args, arg_name)}")
     feature_engineering(args.dataset_name, args.output_path)

@@ -1,7 +1,7 @@
 # <component>
 name: paynet_feature_engineering
 display_name: Paynet - Feature Engineering Component
-version: 2
+version: 4
 type: command
 inputs:
   dataset_name:
