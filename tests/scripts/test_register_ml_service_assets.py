@@ -3,52 +3,13 @@ import os
 import pytest
 from unittest.mock import MagicMock, patch
 from azure.core.exceptions import ResourceNotFoundError
-from src.scripts.register_ml_service_assets import asset_exists
-from unittest.mock import MagicMock, patch, call
-from src.scripts.register_ml_service_assets import register_environments, asset_exists, register_components
-
-def test_asset_exists_true():
-    # Mock the asset collection and its get method
-    mock_asset_collection = MagicMock()
-    mock_asset_collection.get.return_value = True
-
-    # Call the function with the mock
-    result = asset_exists(mock_asset_collection, "test_asset", "1.0")
-
-    # Assert the result is True
-    assert result == True
-    mock_asset_collection.get.assert_called_once_with(name="test_asset", version="1.0")
-
-def test_asset_exists_false():
-    # Mock the asset collection and its get method to raise ResourceNotFoundError
-    mock_asset_collection = MagicMock()
-    mock_asset_collection.get.side_effect = ResourceNotFoundError
-
-    # Call the function with the mock
-    result = asset_exists(mock_asset_collection, "test_asset", "1.0")
-
-    # Assert the result is False
-    assert result == False
-    mock_asset_collection.get.assert_called_once_with(name="test_asset", version="1.0")
-
-def test_asset_exists_exception():
-    # Mock the asset collection and its get method to raise a generic exception
-    mock_asset_collection = MagicMock()
-    mock_asset_collection.get.side_effect = Exception("Unexpected error")
-
-    # Call the function with the mock
-    result = asset_exists(mock_asset_collection, "test_asset", "1.0")
-
-    # Assert the result is False
-    assert result == False
-    mock_asset_collection.get.assert_called_once_with(name="test_asset", version="1.0")
+from src.scripts.register_ml_service_assets import register_environments, register_components
 
 @patch("src.scripts.register_ml_service_assets.os.path.isdir")
 @patch("src.scripts.register_ml_service_assets.os.path.isfile")
 @patch("src.scripts.register_ml_service_assets.os.listdir")
 @patch("src.scripts.register_ml_service_assets.load_environment")
-@patch("src.scripts.register_ml_service_assets.asset_exists")
-def test_register_environments(asset_exists_mock, load_environment_mock, listdir_mock, isfile_mock, isdir_mock):
+def test_register_environments(load_environment_mock, listdir_mock, isfile_mock, isdir_mock):
     # Mock the inputs
     ml_client_mock = MagicMock()
     src_path = os.path.join(".", "fake", "path")
@@ -65,9 +26,6 @@ def test_register_environments(asset_exists_mock, load_environment_mock, listdir
     env_asset_mock.version = "1.0"
     load_environment_mock.return_value = env_asset_mock
 
-    # Mock the asset_exists function
-    asset_exists_mock.return_value = False
-
     # Call the function
     register_environments(ml_client_mock, src_path, ignore_list)
 
@@ -79,15 +37,13 @@ def test_register_environments(asset_exists_mock, load_environment_mock, listdir
     isfile_mock.assert_any_call(os.path.join(src_path, "environments", "env2", "definition.yaml"))
     load_environment_mock.assert_any_call(source=os.path.join(src_path, "environments", "env1", "definition.yaml"))
     load_environment_mock.assert_any_call(source=os.path.join(src_path, "environments", "env2", "definition.yaml"))
-    asset_exists_mock.assert_any_call(ml_client_mock.environments, "env1", "1.0")
     ml_client_mock.environments.create_or_update.assert_any_call(env_asset_mock)
 
 @patch("src.scripts.register_ml_service_assets.os.path.isdir")
 @patch("src.scripts.register_ml_service_assets.os.path.isfile")
 @patch("src.scripts.register_ml_service_assets.os.listdir")
 @patch("src.scripts.register_ml_service_assets.load_environment")
-@patch("src.scripts.register_ml_service_assets.asset_exists")
-def test_register_environments_ignore(asset_exists_mock, load_environment_mock, listdir_mock, isfile_mock, isdir_mock):
+def test_register_environments_ignore(load_environment_mock, listdir_mock, isfile_mock, isdir_mock):
     # Mock the inputs
     ml_client_mock = MagicMock()
     src_path = os.path.join(".", "fake", "path")
@@ -104,9 +60,6 @@ def test_register_environments_ignore(asset_exists_mock, load_environment_mock, 
     env_asset_mock.version = "1.0"
     load_environment_mock.return_value = env_asset_mock
 
-    # Mock the asset_exists function
-    asset_exists_mock.return_value = False
-
     # Call the function
     register_environments(ml_client_mock, src_path, ignore_list)
 
@@ -115,7 +68,6 @@ def test_register_environments_ignore(asset_exists_mock, load_environment_mock, 
     isdir_mock.assert_any_call(os.path.join(src_path, "environments", "env1"))
     isfile_mock.assert_any_call(os.path.join(src_path, "environments", "env1", "definition.yaml"))
     load_environment_mock.assert_any_call(source=os.path.join(src_path, "environments", "env1", "definition.yaml"))
-    asset_exists_mock.assert_any_call(ml_client_mock.environments, "env1", "1.0")
     ml_client_mock.environments.create_or_update.assert_any_call(env_asset_mock)
 
 @patch("src.scripts.register_ml_service_assets.os.path.isdir")
@@ -144,8 +96,7 @@ def test_register_environments_file_not_found(listdir_mock, isfile_mock, isdir_m
 @patch("src.scripts.register_ml_service_assets.os.walk")
 @patch("src.scripts.register_ml_service_assets.os.path.isfile")
 @patch("src.scripts.register_ml_service_assets.load_component")
-@patch("src.scripts.register_ml_service_assets.asset_exists")
-def test_register_components(asset_exists_mock, load_component_mock, isfile_mock, walk_mock):
+def test_register_components(load_component_mock, isfile_mock, walk_mock):
     # Mock the inputs
     ml_client_mock = MagicMock()
     src_path = os.path.join(".", "fake", "path")
@@ -164,9 +115,6 @@ def test_register_components(asset_exists_mock, load_component_mock, isfile_mock
     comp_asset_mock.version = "1.0"
     load_component_mock.return_value = comp_asset_mock
 
-    # Mock the asset_exists function
-    asset_exists_mock.return_value = False
-
     # Call the function
     register_components(ml_client_mock, src_path, ignore_list)
 
@@ -174,14 +122,12 @@ def test_register_components(asset_exists_mock, load_component_mock, isfile_mock
     walk_mock.assert_called_once_with(os.path.join(src_path, "components"))
     load_component_mock.assert_any_call(source=os.path.join(src_path, "components", "comp1.yaml"))
     load_component_mock.assert_any_call(source=os.path.join(src_path, "components", "subdir", "comp2.yaml"))
-    asset_exists_mock.assert_any_call(ml_client_mock.components, "comp1", "1.0")
     ml_client_mock.components.create_or_update.assert_any_call(comp_asset_mock)
 
 @patch("src.scripts.register_ml_service_assets.os.walk")
 @patch("src.scripts.register_ml_service_assets.os.path.isfile")
 @patch("src.scripts.register_ml_service_assets.load_component")
-@patch("src.scripts.register_ml_service_assets.asset_exists")
-def test_register_components_ignore(asset_exists_mock, load_component_mock, isfile_mock, walk_mock):
+def test_register_components_ignore(load_component_mock, isfile_mock, walk_mock):
     # Mock the inputs
     ml_client_mock = MagicMock()
     src_path = os.path.join(".", "fake", "path")
@@ -199,7 +145,6 @@ def test_register_components_ignore(asset_exists_mock, load_component_mock, isfi
     # Assertions
     walk_mock.assert_called_once_with(os.path.join(src_path, "components"))
     load_component_mock.assert_not_called()
-    asset_exists_mock.assert_not_called()
     ml_client_mock.components.create_or_update.assert_not_called()
 
 

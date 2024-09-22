@@ -26,8 +26,8 @@ def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
         train_df, test_df = train_test_split(df, test_size=(1 - split_ratio), random_state=42)
 
         # Create directories if they don't exist
-        os.makedirs(os.path.dirname(train_path), exist_ok=True)
-        os.makedirs(os.path.dirname(test_path), exist_ok=True)
+        os.makedirs(train_path, exist_ok=True)
+        os.makedirs(test_path, exist_ok=True)
 
         train_file = os.path.join(train_path, "train_data.csv")
         train_df.to_csv(train_file, index=False)
