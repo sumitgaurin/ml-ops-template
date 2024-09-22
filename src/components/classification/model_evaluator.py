@@ -84,4 +84,4 @@ if __name__ == "__main__":
     for arg_name in vars(args):
         print(f"{arg_name}: {getattr(args, arg_name)}")
         
-    evaluate_model(args.model_id, args.model_name, args.model_version, args.test_data, args.output_path)
+    evaluate_model(args.model_id, args.model_path, args.test_data, args.outcome_label, args.output_path)
