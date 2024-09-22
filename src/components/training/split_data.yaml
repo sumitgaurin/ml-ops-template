@@ -2,7 +2,7 @@
 name: split_data
 display_name: Dataset Splitter
 description: Splits the input dataset into train and test datasets based on split ratio
-version: 4
+version: 5
 type: command
 inputs:
   input_data:
