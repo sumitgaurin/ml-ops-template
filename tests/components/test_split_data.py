@@ -7,15 +7,16 @@ class TestDatasetSplitting(unittest.TestCase):
 
     def setUp(self):
         # Create a temporary dataset for testing
-        self.dataset_path = 'test_data.csv'
+        self.dataset_path = 'test_data'
         self.train_output_dir = 'train_output'
         self.test_output_dir = 'test_output'
+        os.makedirs(self.dataset_path, exist_ok=True)
         df = pd.DataFrame({
             'feature1': [1, 2, 3, 4, 5],
             'feature2': [10, 20, 30, 40, 50],
             'label': [0, 1, 0, 1, 0]
         })
-        df.to_csv(self.dataset_path, index=False)
+        df.to_csv(os.path.join(self.dataset_path, 'test_data.csv'), index=False)
 
     def test_split_dataset(self):
         # Define the expected output files
@@ -23,7 +24,7 @@ class TestDatasetSplitting(unittest.TestCase):
         test_file = os.path.join(self.test_output_dir, 'test_data.csv')
 
         # Call the dataset splitting function
-        split_dataset(self.dataset_path, train_file, test_file, split_ratio=0.6)
+        split_dataset(self.dataset_path, self.train_output_dir, self.test_output_dir, split_ratio=0.6)
 
         # Verify that train and test datasets are saved
         self.assertTrue(os.path.exists(train_file))
@@ -38,7 +39,9 @@ class TestDatasetSplitting(unittest.TestCase):
     def tearDown(self):
         # Clean up the test environment
         if os.path.exists(self.dataset_path):
-            os.remove(self.dataset_path)
+            for file in os.listdir(self.dataset_path):
+                os.remove(os.path.join(self.dataset_path, file))
+            os.rmdir(self.dataset_path)
         if os.path.exists(self.train_output_dir):
             for file in os.listdir(self.train_output_dir):
                 os.remove(os.path.join(self.train_output_dir, file))

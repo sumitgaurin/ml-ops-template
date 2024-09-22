@@ -1,58 +1,63 @@
-import unittest
-import os
+import pytest
 import json
+import os
+import pandas as pd
+from unittest import mock
 from src.components.classification.model_selector import compare_models
 
-class TestModelSelector(unittest.TestCase):
+@pytest.fixture
+def mock_metrics_files(tmp_path):
+    # Create temporary JSON files with mock metrics
+    model1_metrics = {
+        "model_id": "model_1",
+        "f1_score": 0.8,
+        "fpr": 0.1,
+        "fnr": 0.2
+    }
+    model2_metrics = {
+        "model_id": "model_2",
+        "f1_score": 0.85,
+        "fpr": 0.15,
+        "fnr": 0.1
+    }
 
-    def setUp(self):
-        # Create temporary metrics files for two models
-        self.metrics_file_1 = 'metrics_model_1.json'
-        self.metrics_file_2 = 'metrics_model_2.json'
-        self.output_dir = 'output'
+    model1_path = tmp_path / "model1_metrics.json"
+    model2_path = tmp_path / "model2_metrics.json"
 
-        # Metrics for the first model
-        metrics_1 = {
-            "model_name": "diabetes_logreg_model",
-            "model_version": "1",
-            "accuracy": 0.85
-        }
-        with open(self.metrics_file_1, 'w') as f:
-            json.dump(metrics_1, f)
+    with open(model1_path, 'w') as f:
+        json.dump(model1_metrics, f)
+    with open(model2_path, 'w') as f:
+        json.dump(model2_metrics, f)
 
-        # Metrics for the second model
-        metrics_2 = {
-            "model_name": "diabetes_gboost_model",
-            "model_version": "1",
-            "accuracy": 0.90
-        }
-        with open(self.metrics_file_2, 'w') as f:
-            json.dump(metrics_2, f)
+    return [str(model1_path), str(model2_path)]
 
-    def test_compare_models(self):
-        # Call the model comparison function
-        report_file = os.path.join(self.output_dir, 'comparison_report.txt')
-        compare_models([self.metrics_file_1, self.metrics_file_2], report_file)
+@pytest.fixture
+def output_path(tmp_path):
+    return str(tmp_path / "comparison_report.json")
 
-        # Verify that the comparison report is saved
-        self.assertTrue(os.path.exists(report_file))
+def test_compare_models_minimize_fp(mock_metrics_files, output_path):
+    compare_models(mock_metrics_files, 'minimize_fp', output_path)
+    
+    with open(output_path, 'r') as f:
+        result = json.load(f)
+    
+    assert result['best_model_id'] == 'model_1'
+    assert len(result['models']) == 2
 
-        # Check the best model is gboost (since its accuracy is higher)
-        with open(report_file, 'r') as f:
-            best_model = f.read().strip()
-        print(best_model)
-        self.assertIn('diabetes_gboost_model', best_model)
+def test_compare_models_minimize_fn(mock_metrics_files, output_path):
+    compare_models(mock_metrics_files, 'minimize_fn', output_path)
+    
+    with open(output_path, 'r') as f:
+        result = json.load(f)
+    
+    assert result['best_model_id'] == 'model_2'
+    assert len(result['models']) == 2
 
-    def tearDown(self):
-        # Clean up the test environment
-        if os.path.exists(self.metrics_file_1):
-            os.remove(self.metrics_file_1)
-        if os.path.exists(self.metrics_file_2):
-            os.remove(self.metrics_file_2)
-        if os.path.exists(self.output_dir):
-            for file in os.listdir(self.output_dir):
-                os.remove(os.path.join(self.output_dir, file))
-            os.rmdir(self.output_dir)
-
-if __name__ == '__main__':
-    unittest.main()
+def test_compare_models_maximize_f1(mock_metrics_files, output_path):
+    compare_models(mock_metrics_files, 'maximize_f1', output_path)
+    
+    with open(output_path, 'r') as f:
+        result = json.load(f)
+    
+    assert result['best_model_id'] == 'model_2'
+    assert len(result['models']) == 2
