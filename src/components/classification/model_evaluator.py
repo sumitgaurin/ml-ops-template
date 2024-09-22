@@ -4,18 +4,16 @@ import json
 import os
 import pandas as pd
 import mlflow
+from mlflow.sklearn import load_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score
-from azureml.core import Model, Run
-import joblib
-from azure.core.exceptions import ResourceNotFoundError
 
-def evaluate_model(model_name, model_version, test_data_path, outcome_label, output_path):
+def evaluate_model(model_id, model_path, test_data_path, outcome_label, output_path):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # Load the training data from the CSV files
         print('Loacating test dataset files...')
         csv_files = glob.glob(os.path.join(test_data_path, '*.csv'))
-        print(f'Found {csv_files.count} files in test dataset')
+        print(f'Found {len(csv_files)} files in test dataset')
 
         print('Loading test dataset files...')
         df = pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
@@ -26,14 +24,9 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
         X_test = df.drop(outcome_label, axis=1)
         y_test = df[outcome_label]
 
-        # Load the model from Azure ML
-        ws = Run.get_context().experiment.workspace
-        
         # Get the model and if not found then send the zero-metric
-        model = None
         metrics = {
-            "model_name": 0,
-            "model_version": 0,
+            "model_id": "",
             "accuracy": 0,
             "recall": 0,
             "precision": 0,
@@ -42,26 +35,11 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
             "fnr": 1
         }
 
-        try:
-            # Get the latest model if version is not provided
-            # otherwise get the specific version
-            if model_version is None or len(model_version) == 0 or model_version == 'latest':
-                model = Model(ws, name=model_name)
-            else:
-                model = Model(ws, name=model_name, version=model_version)
-            print(f"Model '{model_name}' with version '{model_version}' exists.")
-            return True
-        except ResourceNotFoundError:
-            print(f"Model '{model_name}' with version '{model_version}' does not exists.")        
-        
-        # Run model evaluation only if the model for the specified version is found
-        if model is not None:
-            # download the model
-            model_path = model.download(exist_ok=True)
-            
-            # Load the model from the downloaded file
-            trained_model = joblib.load(model_path)
+        # Load the model from the model path
+        trained_model = load_model(model_path)
 
+        # Run model evaluation only if the model for the specified version is found
+        if trained_model is not None:
             # Predict on the test data
             y_pred = trained_model.predict(X_test)
 
@@ -73,8 +51,7 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
             
             # Prepare the results
             metrics = {
-                "model_name": model_name,
-                "model_version": model_version,
+                "model_id": model_id,
                 "accuracy": accuracy,
                 "recall": recall,
                 "precision": precision,
@@ -96,9 +73,10 @@ def evaluate_model(model_name, model_version, test_data_path, outcome_label, out
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, help='Name of the model')
-    parser.add_argument('--model_version', type=str, help='Version of the model')
+    parser.add_argument('--model_id', type=str, help='A string identiifer which can be used to recognize the results')    
+    parser.add_argument('--model_path', type=str, help='Path containing the trained model')    
     parser.add_argument('--test_data', type=str, help='Path to the test data CSV file')
+    parser.add_argument('--outcome_label', type=str, help='Name of the column with the outcome label')
     parser.add_argument('--output_path', type=str, help='Path to save the results JSON file')
 
     args = parser.parse_args()
@@ -106,4 +84,4 @@ if __name__ == "__main__":
     for arg_name in vars(args):
         print(f"{arg_name}: {getattr(args, arg_name)}")
         
-    evaluate_model(args.model_name, args.model_version, args.test_data, args.output_path)
+    evaluate_model(args.model_id, args.model_name, args.model_version, args.test_data, args.output_path)

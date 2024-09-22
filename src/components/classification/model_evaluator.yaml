@@ -5,19 +5,18 @@ description: Runs the model agains test dataset and generates the classification
 version: 5
 type: command
 inputs:
-  model_name:
+  model_id:
     type: string
-    description: Name of the published model
-  model_version:
-    type: string
-    description: Version of the published model
+    description: A string identiifer which can be used to recognize the results
+  model_path:
+    type: uri_folder
+    description: Path containing the trained model
   test_data:
     type: uri_folder
-    description: Path to the test data CSV file
+    description: Path to the CSV test dataset
   outcome_label:
     type: string
     description: Name of the column with the outcome label
-    default: outcome
 outputs:
   result_file:
     type: uri_file

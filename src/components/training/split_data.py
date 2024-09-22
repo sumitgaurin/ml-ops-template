@@ -15,7 +15,7 @@ def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
         # Load the training data from the CSV files
         print('Loacating training feature dataset files...')
         csv_files = glob.glob(os.path.join(input_data_path, '*.csv'))
-        print(f'Found {csv_files.count} files in training feature dataset')
+        print(f'Found {len(csv_files)} files in training feature dataset')
 
         print('Loading training feature dataset files...')
         df = pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
@@ -29,8 +29,10 @@ def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
         os.makedirs(os.path.dirname(train_path), exist_ok=True)
         os.makedirs(os.path.dirname(test_path), exist_ok=True)
 
-        train_df.to_csv(train_path, index=False)
-        test_df.to_csv(test_path, index=False)
+        train_file = os.path.join(train_path, "train_data.csv")
+        train_df.to_csv(train_file, index=False)
+        test_file = os.path.join(train_path, "test_data.csv")
+        test_df.to_csv(test_file, index=False)
 
         print(f"Train dataset saved to {train_path}")
         print(f"Test dataset saved to {test_path}")
