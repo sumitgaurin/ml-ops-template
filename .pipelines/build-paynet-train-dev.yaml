@@ -10,11 +10,11 @@ parameters:
   - name: pipeline_definition
     displayName: "Name of the pipeline definition yaml file"
     type: string
-    default: "./src/pipelines/paynet_model_training.yaml"
+    default: "./src/pipelines/paynet_train_compare_model_pipeline.yaml"
   - name: pipeline_parameter
     displayName: "Name of the pipeline parameter json file"
     type: string
-    default: "./src/pipelines/paynet_model_training_parameters.json"
+    default: "./src/pipelines/paynet_train_compare_model_parameters.json"
   - name: experiment_name
     displayName: "Name of the experiment that will be run"
     type: string
@@ -96,7 +96,7 @@ stages:
               RESOURCE_GROUP_NAME: "${{ parameters.resource_group_name }}"
 
           - task: AzureCLI@2
-            displayName: "Deploy ML pipeline components"
+            displayName: "Deploy ML pipeline environment"
             inputs:
               azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
               scriptType: bash
@@ -113,7 +113,8 @@ stages:
                   --subscription_id $subscription_id \
                   --resource_group $RESOURCE_GROUP_NAME \
                   --workspace_name $WORKSPACE_NAME \
-                  --src_path $src_path
+                  --asset_type environments \
+                  --src_path $src_path \
             env:
               WORKSPACE_NAME: "${{ parameters.workspace_name }}"
               RESOURCE_GROUP_NAME: "${{ parameters.resource_group_name }}"
