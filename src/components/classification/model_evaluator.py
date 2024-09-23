@@ -7,7 +7,31 @@ import mlflow
 from mlflow.sklearn import load_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 
-def evaluate_model(model_id, model_path, test_data_path, outcome_label, result_file):
+def evaluate_model(model_id:str, model_path:str, test_data_path:str, outcome_label:str, result_file:str)->None:
+    """
+    Evaluate a machine learning model on test data and save the evaluation metrics.
+    
+    Parameters
+    -----------
+    model_id : str 
+        Identifier for the model being evaluated.
+
+    model_path : str 
+        Path to the trained model file.
+
+    test_data_path : str 
+        Directory path containing test data CSV files.
+    
+    outcome_label : str
+        The column name in the test data that contains the true labels.
+    
+    result_file : str
+        Path to the file where evaluation metrics will be saved.
+    
+    Returns
+    --------
+    None : The function saves the evaluation metrics to the specified result file.
+    """
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # Load the training data from the CSV files

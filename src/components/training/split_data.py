@@ -6,7 +6,29 @@ import mlflow
 import mlflow.sklearn
 from sklearn.model_selection import train_test_split
 
-def split_dataset(input_data_path, train_path, test_path, split_ratio=0.7):
+def split_dataset(input_data_path:str, train_path:str, test_path:str, split_ratio:float=0.7)->None:
+    """
+    Splits a dataset into training and testing sets and saves them to specified paths.
+
+    Parameters
+    ----------
+    input_data_path : str
+        The directory path where the input CSV files are located.
+    
+    train_path : str 
+        The directory path where the training dataset will be saved.
+        
+    test_path : str
+        The directory path where the testing dataset will be saved.
+
+    split_ratio : float, optional
+        The ratio of the dataset to be used for training. 
+        The default value is 0.7, meaning 70% of the data will be used for training and 30% for testing.
+        
+    Returns
+    -------
+    None : The function saves the training and testing datasets to the specified paths.
+    """
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # enable autologging

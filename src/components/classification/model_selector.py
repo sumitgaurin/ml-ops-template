@@ -4,7 +4,28 @@ import os
 import mlflow
 import pandas as pd
 
-def compare_models(metrics_file_paths, constraint, output_path):
+def compare_models(metrics_file_paths:str, constraint:str, output_path:str)->None:
+    """
+    Compare models based on their metrics and select the best model according to a given constraint.
+    
+    Parameters
+    ----------
+    metrics_file_paths : list of str
+        List of file paths to JSON files containing model metrics.
+    
+    constraint : str
+        The constraint to use for selecting the best model. 
+        Options are 'minimize_fp' (minimize false positives), 
+        'minimize_fn' (minimize false negatives), 
+        or 'balanced' to maximize the F1 score.
+    
+    output_path : str
+        The file path where the comparison report will be saved.
+    
+    Returns
+    -------
+    None: The function saves the comparison report to the specified output path.
+    """
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # Load metrics from the provided JSON files
