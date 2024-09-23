@@ -9,11 +9,13 @@ class TestSplitDataset(unittest.TestCase):
 
     def setUp(self):
         # Setup paths for input and output
+        self.test_dir = "test_output_data"
         self.input_data_path = 'test_input_data'
-        self.train_output_path = 'test_output_data/train'
-        self.test_output_path = 'test_output_data/test'
+        self.train_output_path = os.path.join(self.test_dir, 'train')
+        self.test_output_path = os.path.join(self.test_dir, 'test')
         
         # Create directories
+        os.makedirs(self.test_dir, exist_ok=True)
         os.makedirs(self.input_data_path, exist_ok=True)
         os.makedirs(self.train_output_path, exist_ok=True)
         os.makedirs(self.test_output_path, exist_ok=True)
@@ -28,7 +30,7 @@ class TestSplitDataset(unittest.TestCase):
 
     def tearDown(self):
         # Cleanup created directories and files
-        for path in [self.input_data_path, self.train_output_path, self.test_output_path]:
+        for path in [self.test_dir, self.input_data_path]:
             if os.path.exists(path):
                 shutil.rmtree(path)
 
