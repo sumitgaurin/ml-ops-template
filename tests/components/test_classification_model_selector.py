@@ -1,4 +1,5 @@
 import shutil
+import unittest
 import pytest
 import json
 import os
@@ -6,21 +7,13 @@ import pandas as pd
 from unittest import mock
 from src.components.classification.model_selector import compare_models
 
-class TestCompareModels:
-    @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+class TestCompareModels(unittest.TestCase):
+
+    def setUp(self):
         # Setup: Create a temporary directory for the test
         self.test_dir = "test_output"
         os.mkdir(self.test_dir)
 
-        # Teardown: Cleanup any files or folders generated during the test
-        yield
-        # Cleanup the temporary directory recursively along with all its content using shutil.rmtree
-        if os.path.exists(self.test_dir):
-            shutil.rmtree(self.test_dir)
-
-    @pytest.fixture
-    def mock_metrics_files(self):
         # Create temporary JSON files with mock metrics
         model1_metrics = {
             "model_id": "model_1",
@@ -43,18 +36,20 @@ class TestCompareModels:
         with open(model2_path, 'w') as f:
             json.dump(model2_metrics, f)
 
-        return [str(model1_path), str(model2_path)]
+        self.mock_metrics_files = [str(model1_path), str(model2_path)]
+        self.output_path = os.path.join(self.test_dir, "comparison_report.json")
 
-    @pytest.fixture
-    def output_path(self):
-        return os.path.join(self.test_dir, "comparison_report.json")
+    def tearDown(self):
+        # Cleanup created directories and files
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
 
     @mock.patch('src.components.classification.model_selector.mlflow')
-    def test_compare_models_minimize_fp(self, mock_mlflow, mock_metrics_files, output_path):
+    def test_compare_models_minimize_fp(self, mock_mlflow):
         # Call the function to compare models
-        compare_models(mock_metrics_files, 'minimize_fp', output_path)
+        compare_models(self.mock_metrics_files, 'minimize_fp', self.output_path)
         
-        with open(output_path, 'r') as f:
+        with open(self.output_path, 'r') as f:
             result = json.load(f)
         
         assert result['best_model_id'] == 'model_1'
@@ -64,10 +59,10 @@ class TestCompareModels:
         mock_mlflow.start_run.assert_called()
 
     @mock.patch('src.components.classification.model_selector.mlflow')
-    def test_compare_models_minimize_fn(self, mock_mlflow, mock_metrics_files, output_path):
-        compare_models(mock_metrics_files, 'minimize_fn', output_path)
+    def test_compare_models_minimize_fn(self, mock_mlflow):
+        compare_models(self.mock_metrics_files, 'minimize_fn', self.output_path)
         
-        with open(output_path, 'r') as f:
+        with open(self.output_path, 'r') as f:
             result = json.load(f)
         
         assert result['best_model_id'] == 'model_2'
@@ -77,10 +72,10 @@ class TestCompareModels:
         mock_mlflow.start_run.assert_called()
 
     @mock.patch('src.components.classification.model_selector.mlflow')
-    def test_compare_models_maximize_f1(self, mock_mlflow, mock_metrics_files, output_path):
-        compare_models(mock_metrics_files, 'maximize_f1', output_path)
+    def test_compare_models_maximize_f1(self, mock_mlflow):
+        compare_models(self.mock_metrics_files, 'maximize_f1', self.output_path)
         
-        with open(output_path, 'r') as f:
+        with open(self.output_path, 'r') as f:
             result = json.load(f)
         
         assert result['best_model_id'] == 'model_2'

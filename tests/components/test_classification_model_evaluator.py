@@ -1,5 +1,6 @@
 import shutil
 from unittest import mock
+import unittest
 import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
@@ -9,16 +10,14 @@ from src.components.classification.model_evaluator import evaluate_model
 
 
 # Test class for testing evaluate_model function including cleanup code for any files or folders generated during the test execution
-class TestEvaluateModel:
-    @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+class TestEvaluateModel(unittest.TestCase):
+    def setUp(self):
         # Setup: Create a temporary directory for the test
         self.test_dir = "test_output"
         os.mkdir(self.test_dir)
 
-        # Teardown: Cleanup any files or folders generated during the test
-        yield
-        # Cleanup the temporary directory recursively along with all its content using shutil.rmtree
+    def tearDown(self):
+        # Cleanup created directories and files
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
 
@@ -43,9 +42,9 @@ class TestEvaluateModel:
         df2 = pd.DataFrame({"feature1": [3, 4], "feature2": [5, 6], "outcome": [1, 0]})
         # configure mock_pd_read_csv to return df1 when called with test1.csv and df2 when called with test2.csv
         mock_pd_read_csv.side_effect = lambda filename: {
-            'test1.csv': df1,
-            'test2.csv': df2
-        }.get(filename, pd.DataFrame())        
+            "test1.csv": df1,
+            "test2.csv": df2,
+        }.get(filename, pd.DataFrame())
 
         # configure the mock_load_model to return None
         mock_load_model.return_value = None
@@ -89,10 +88,10 @@ class TestEvaluateModel:
         df2 = pd.DataFrame({"feature1": [3, 4], "feature2": [5, 6], "outcome": [1, 0]})
         # configure mock_pd_read_csv to return df1 when called with test1.csv and df2 when called with test2.csv
         mock_pd_read_csv.side_effect = lambda filename: {
-            'test1.csv': df1,
-            'test2.csv': df2
+            "test1.csv": df1,
+            "test2.csv": df2,
         }.get(filename, pd.DataFrame())
-        
+
         # configure the mock_load_model to return a mock model that predicts [0, 1, 1, 0]
         mock_model = MagicMock()
         mock_model.predict.return_value = [0, 1, 1, 0]
