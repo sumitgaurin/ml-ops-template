@@ -27,7 +27,7 @@ def log_report(report: list, log_entry: str) -> None:
 
 def register_trained_model(
     comparison_report: str,
-    model_path: str,
+    trained_model: str,
     model_name: str,
     model_id: str,
     register_report: str,
@@ -40,7 +40,7 @@ def register_trained_model(
     comparison_report : str
         The path to the comparison report generated during model training.
 
-    model_path : str
+    trained_model : str
         The path to the trained model.
 
     model_name : str
@@ -79,7 +79,7 @@ def register_trained_model(
 
                 # Load the trained model
                 log_report(registration_report, "Loading trained model...")
-                model = mlflow.sklearn.load_model(model_path)
+                model = mlflow.sklearn.load_model(trained_model)
                 log_report(registration_report, f"Loaded model: {model}")
 
                 # Register the model
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--comparison_report", type=str, help="Path to the json comparison report"
     )
-    parser.add_argument("--model_path", type=str, help="Path to the model")
+    parser.add_argument("--trained_model", type=str, help="Path to the trained model")
     parser.add_argument("--model_name", type=str, help="Name of the model")
     parser.add_argument(
         "--model_id", type=str, help="Key of the trained model in the comparison report"
@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
     register_trained_model(
         args.comparison_report,
-        args.model_path,
+        args.trained_model,
         args.model_name,
         args.model_id,
         args.register_report,
