@@ -1,0 +1,32 @@
+# <component>
+name: register_model
+display_name: Model Registration
+description: Registers the model in the Azure Machine Learning workspace if better than the existing model
+version: 1
+type: command
+inputs:
+  comparison_report:
+    type: uri_file
+    description: The model comparison report
+  model_name:
+    type: string
+    description: The name of the model to be registered
+  model_id:
+    type: string
+    description: The id of the model of the trained model as per the pipeline
+  trained_model:
+    type: mlflow_model
+    description: Path of the trained model folder  
+outputs:
+  register_report:
+    type: uri_file
+    description: Path to the registration report
+code: .
+command: >
+  python register_model.py
+  --comparison_report ${{inputs.comparison_report}}
+  --model_name ${{inputs.model_name}}
+  --model_id ${{inputs.model_id}}
+  --trained_model ${{inputs.trained_model}}
+  --register_report ${{outputs.register_report}}
+environment: azureml:sklearn-dev310@latest
