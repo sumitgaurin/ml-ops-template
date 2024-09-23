@@ -88,8 +88,7 @@ stages:
 
           - script: |
               echo 'Running python dependency installation ...'
-              source ./.pipelines/pkg-requirements/install.sh
-              pip install azure-identity==1.18.0
+              source ./.pipelines/pkg-requirements/install.sh              
             displayName: "Install Python dependencies"
             workingDirectory: "$(Build.SourcesDirectory)"
 
