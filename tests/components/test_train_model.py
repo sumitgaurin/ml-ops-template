@@ -4,53 +4,74 @@ import pandas as pd
 from unittest import mock
 from src.components.training.train_model import train_model_paynet
 
-class TestTrainModel(unittest.TestCase):
+class TestTrainModelPaynet(unittest.TestCase):
 
-    def setUp(self):
-        # Create a sample dataset for testing
-        self.sample_data = pd.DataFrame({
-            'feature1': [1, 2, 3, 4],
-            'feature2': [5, 6, 7, 8],
-            'label': [0, 1, 0, 1]
-        })
+    @mock.patch('src.components.training.train_model.mlflow.start_run')
+    @mock.patch('src.components.training.train_model.mlflow.sklearn.autolog')
+    @mock.patch('src.components.training.train_model.mlflow.sklearn.save_model')
+    @mock.patch('src.components.training.train_model.glob.glob')
+    @mock.patch('src.components.training.train_model.pd.read_csv')
+    def test_train_model_paynet(self, mock_read_csv, mock_glob, mock_save_model, mock_autolog, mock_start_run):
+        # Mock the CSV files
+        mock_glob.return_value = ['file1.csv', 'file2.csv']
+        
+        # Mock the dataframes returned by pd.read_csv
+        mock_read_csv.side_effect = [
+            pd.DataFrame({'feature1': [1, 2], 'feature2': [3, 4], 'outcome': [0, 1]}),
+            pd.DataFrame({'feature1': [5, 6], 'feature2': [7, 8], 'outcome': [1, 0]})
+        ]
+        
+        # Define the arguments
+        training_data_path = 'dummy_path'
+        outcome_label = 'outcome'
+        output_model_path = 'dummy_output_path'
+        n_estimators = 100
+        learning_rate = 0.1
+        
+        # Call the function
+        train_model_paynet(training_data_path, outcome_label, output_model_path, n_estimators, learning_rate)
+        
+        # Assertions
+        mock_glob.assert_called_once_with(os.path.join(training_data_path, '*.csv'))
+        # assert that mock_read_csv is called twice
+        self.assertEqual(mock_read_csv.call_count, 2)
+        # assert that mock_autolog is called once
+        mock_autolog.assert_called_once()
+        # assert that mock_save_model is called once
+        mock_save_model.assert_called_once()
+        # assert that mock_start_run is called more than once
+        self.assertGreater(mock_start_run.call_count, 1)
 
-        # Set paths for the test
-        self.training_data_path = 'test_training_data.csv'
-        self.output_model_dir = 'test_output_model'
-
-        # Save the sample data to a CSV file (mocked later)
-        self.sample_data.to_csv(self.training_data_path, index=False)
-
-        # Mock the os.makedirs function to avoid creating directories
-        self.makedirs_patcher = mock.patch('os.makedirs')
-        self.mock_makedirs = self.makedirs_patcher.start()
-
-        # Mock the joblib.dump function to avoid writing to disk
-        self.joblib_dump_patcher = mock.patch('joblib.dump')
-        self.mock_joblib_dump = self.joblib_dump_patcher.start()
-
-    def test_train_model(self):
-        # Mock the pd.read_csv function to return the sample data
-        with mock.patch('pandas.read_csv', return_value=self.sample_data):
-            # Call the train_model function
-            train_model_paynet(self.training_data_path, self.output_model_dir)
-
-            # Check that the model was saved using joblib
-            model_output_path = os.path.join(self.output_model_dir, 'trained_model.pkl')
-            self.mock_joblib_dump.assert_called_with(mock.ANY, model_output_path)
-
-    def tearDown(self):
-        # Clean up the patchers
-        self.makedirs_patcher.stop()
-        self.joblib_dump_patcher.stop()
-
-        # Remove the test CSV file
-        if os.path.exists(self.training_data_path):
-            os.remove(self.training_data_path)
-
-        # Remove the output directory if it was created (mocked, so this may not be necessary)
-        if os.path.exists(self.output_model_dir):
-            os.rmdir(self.output_model_dir)
+    @mock.patch('src.components.training.train_model.mlflow.start_run')
+    @mock.patch('src.components.training.train_model.mlflow.sklearn.autolog')
+    @mock.patch('src.components.training.train_model.mlflow.sklearn.save_model')
+    @mock.patch('src.components.training.train_model.glob.glob')
+    @mock.patch('src.components.training.train_model.pd.read_csv')
+    def test_train_model_paynet_no_csv_files(self, mock_read_csv, mock_glob, mock_save_model, mock_autolog, mock_start_run):
+        # Mock no CSV files
+        mock_glob.return_value = []
+        
+        # Define the arguments
+        training_data_path = 'dummy_path'
+        outcome_label = 'outcome'
+        output_model_path = 'dummy_output_path'
+        n_estimators = 100
+        learning_rate = 0.1
+        
+        # Call the function
+        with self.assertRaises(ValueError):
+            train_model_paynet(training_data_path, outcome_label, output_model_path, n_estimators, learning_rate)
+        
+        # Assertions
+        mock_glob.assert_called_once_with(os.path.join(training_data_path, '*.csv'))
+        # assert that mock_read_csv is not called
+        mock_read_csv.assert_not_called()
+        # assert that mock_autolog is not called
+        mock_autolog.assert_called_once()
+        # assert that mock_save_model is not called
+        mock_save_model.assert_not_called()
+        # assert that mock_start_run is not called
+        mock_start_run.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

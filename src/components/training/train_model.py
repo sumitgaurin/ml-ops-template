@@ -6,7 +6,7 @@ import mlflow
 import mlflow.sklearn
 from sklearn.ensemble import GradientBoostingClassifier
 
-def train_model_paynet(training_data_path, outcome_label, output_model_path):
+def train_model_paynet(training_data_path, outcome_label, output_model_path, n_estimators, learning_rate):
     # Start Logging with mlflow using context manager
     with mlflow.start_run():
         # enable autologging
@@ -30,7 +30,7 @@ def train_model_paynet(training_data_path, outcome_label, output_model_path):
         y_train = df[outcome_label]
         
         model = GradientBoostingClassifier(
-            n_estimators=args.n_estimators, learning_rate=args.learning_rate
+            n_estimators=n_estimators, learning_rate=learning_rate
         ).fit(X_train, y_train)
         
         # Train the model
@@ -63,4 +63,4 @@ if __name__ == "__main__":
     for arg_name in vars(args):
         print(f"{arg_name}: {getattr(args, arg_name)}")
 
-    train_model_paynet(args.training_data, args.outcome_label, args.output_model)
+    train_model_paynet(args.training_data, args.outcome_label, args.output_model, args.n_estimators, args.learning_rate)
