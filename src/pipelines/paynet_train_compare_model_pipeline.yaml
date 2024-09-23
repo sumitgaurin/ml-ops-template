@@ -14,6 +14,7 @@ tags:
 # Inputs should be provided by the caller
 # default values will cause the pipeline to fail
 inputs:
+  model_name: xx
   outcome_label_column_name: xx
   split_ratio: xx
   model_selection_criteria: xx
@@ -23,6 +24,9 @@ outputs:
     type: uri_file
     mode: upload
   model_comparison_report:
+    type: uri_file
+    mode: upload
+  model_register_report:
     type: uri_file
     mode: upload
   trained_model:
@@ -91,3 +95,14 @@ jobs:
       constraint: ${{parent.inputs.model_selection_criteria}}
     outputs:
       comparison_report: ${{parent.outputs.model_comparison_report}}
+
+  register_model_step:
+    type: command
+    component: ./../components/training/register_model.yaml
+    inputs:
+      model_id: trained
+      model_path: ${{parent.jobs.paynet_train_model_step.outputs.output_model}}
+      model_name: ${{parent.inputs.model_name}}
+      comparison_report: ${{parent.jobs.compare_current_trained_model_step.outputs.comparison_report}}
+    outputs:
+      register_report: ${{parent.outputs.model_register_report}}
