@@ -79,6 +79,20 @@ stages:
           vmImage: "ubuntu-latest"
         timeoutInMinutes: 60
         steps:
+          - task: UsePythonVersion@0
+            displayName: "Use Python 3.10"
+            inputs:
+              versionSpec: "3.10.x"
+              addToPath: true
+              architecture: "x64"
+
+          - script: |
+              echo 'Running python dependency installation ...'
+              source ./.pipelines/pkg-requirements/install.sh
+              pip install azure-identity==1.18.0
+            displayName: "Install Python dependencies"
+            workingDirectory: "$(Build.SourcesDirectory)"
+
           - script: |
               echo "Workspace Name: '${{ parameters.workspace_name }}'"
               echo "Resource Group Name: '${{ parameters.resource_group_name }}'"
