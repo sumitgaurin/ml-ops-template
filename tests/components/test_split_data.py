@@ -1,55 +1,108 @@
+import shutil
 import unittest
 import os
 import pandas as pd
 from src.components.training.split_data import split_dataset
+from unittest.mock import patch
 
-class TestDatasetSplitting(unittest.TestCase):
+class TestSplitDataset(unittest.TestCase):
 
     def setUp(self):
-        # Create a temporary dataset for testing
-        self.dataset_path = 'test_data'
-        self.train_output_dir = 'train_output'
-        self.test_output_dir = 'test_output'
-        os.makedirs(self.dataset_path, exist_ok=True)
-        df = pd.DataFrame({
+        # Setup paths for input and output
+        self.input_data_path = 'test_input_data'
+        self.train_output_path = 'test_output_data/train'
+        self.test_output_path = 'test_output_data/test'
+        
+        # Create directories
+        os.makedirs(self.input_data_path, exist_ok=True)
+        os.makedirs(self.train_output_path, exist_ok=True)
+        os.makedirs(self.test_output_path, exist_ok=True)
+        
+        # Create a sample CSV file
+        self.sample_data = pd.DataFrame({
             'feature1': [1, 2, 3, 4, 5],
-            'feature2': [10, 20, 30, 40, 50],
+            'feature2': [5, 4, 3, 2, 1],
             'label': [0, 1, 0, 1, 0]
         })
-        df.to_csv(os.path.join(self.dataset_path, 'test_data.csv'), index=False)
-
-    def test_split_dataset(self):
-        # Define the expected output files
-        train_file = os.path.join(self.train_output_dir, 'train_data.csv')
-        test_file = os.path.join(self.test_output_dir, 'test_data.csv')
-
-        # Call the dataset splitting function
-        split_dataset(self.dataset_path, self.train_output_dir, self.test_output_dir, split_ratio=0.6)
-
-        # Verify that train and test datasets are saved
-        self.assertTrue(os.path.exists(train_file))
-        self.assertTrue(os.path.exists(test_file))
-
-        # Verify the content of the output files
-        train_df = pd.read_csv(train_file)
-        test_df = pd.read_csv(test_file)
-        self.assertEqual(train_df.shape[0], 3)  # 60% of 5 rows
-        self.assertEqual(test_df.shape[0], 2)   # 40% of 5 rows
+        self.sample_data.to_csv(os.path.join(self.input_data_path, 'sample.csv'), index=False)
 
     def tearDown(self):
-        # Clean up the test environment
-        if os.path.exists(self.dataset_path):
-            for file in os.listdir(self.dataset_path):
-                os.remove(os.path.join(self.dataset_path, file))
-            os.rmdir(self.dataset_path)
-        if os.path.exists(self.train_output_dir):
-            for file in os.listdir(self.train_output_dir):
-                os.remove(os.path.join(self.train_output_dir, file))
-            os.rmdir(self.train_output_dir)
-        if os.path.exists(self.test_output_dir):
-            for file in os.listdir(self.test_output_dir):
-                os.remove(os.path.join(self.test_output_dir, file))
-            os.rmdir(self.test_output_dir)
+        # Cleanup created directories and files
+        for path in [self.input_data_path, self.train_output_path, self.test_output_path]:
+            if os.path.exists(path):
+                shutil.rmtree(path)
+
+    @patch('mlflow.start_run')
+    @patch('mlflow.sklearn.autolog')
+    def test_split_dataset(self, mock_autolog, mock_start_run):
+        # Run the split_dataset function
+        split_dataset(self.input_data_path, self.train_output_path, self.test_output_path, split_ratio=0.7)
+        
+        # Check if the train and test files are created
+        train_file = os.path.join(self.train_output_path, 'train_data.csv')
+        test_file = os.path.join(self.test_output_path, 'test_data.csv')
+        
+        self.assertTrue(os.path.exists(train_file))
+        self.assertTrue(os.path.exists(test_file))
+        
+        # Load the datasets
+        train_df = pd.read_csv(train_file)
+        test_df = pd.read_csv(test_file)
+        
+        # Check if the split ratio is approximately correct
+        total_size = len(self.sample_data)
+        train_size = len(train_df)
+        test_size = len(test_df)
+        
+        self.assertAlmostEqual(train_size / total_size, 0.7, delta=0.2)
+        self.assertAlmostEqual(test_size / total_size, 0.3, delta=0.2)
+
+        # Assert that the mlflow function is called atleast once
+        mock_start_run.assert_called()
+        mock_autolog.assert_called()
+
+    @patch('mlflow.start_run')
+    @patch('mlflow.sklearn.autolog')
+    def test_split_dataset_different_ratio(self, mock_autolog, mock_start_run):
+        # Run the split_dataset function with a different split ratio
+        split_dataset(self.input_data_path, self.train_output_path, self.test_output_path, split_ratio=0.5)
+        
+        # Check if the train and test files are created
+        train_file = os.path.join(self.train_output_path, 'train_data.csv')
+        test_file = os.path.join(self.test_output_path, 'test_data.csv')
+        
+        self.assertTrue(os.path.exists(train_file))
+        self.assertTrue(os.path.exists(test_file))
+        
+        # Load the datasets
+        train_df = pd.read_csv(train_file)
+        test_df = pd.read_csv(test_file)
+        
+        # Check if the split ratio is approximately correct
+        total_size = len(self.sample_data)
+        train_size = len(train_df)
+        test_size = len(test_df)
+        
+        self.assertAlmostEqual(train_size / total_size, 0.5, delta=0.2)
+        self.assertAlmostEqual(test_size / total_size, 0.5, delta=0.2)
+
+        # Assert that the mlflow function is called atleast once
+        mock_start_run.assert_called()
+        mock_autolog.assert_called()
+
+    @patch('mlflow.start_run')
+    @patch('mlflow.sklearn.autolog')
+    def test_split_dataset_no_data(self, mock_autolog, mock_start_run):
+        # Remove sample data to simulate no data scenario
+        os.remove(os.path.join(self.input_data_path, 'sample.csv'))
+        
+        with self.assertRaises(ValueError):
+            split_dataset(self.input_data_path, self.train_output_path, self.test_output_path, split_ratio=0.7)
+        
+        # Assert that the mlflow function is called atleast once
+        mock_start_run.assert_called()
+        mock_autolog.assert_called()
+        
 
 if __name__ == '__main__':
     unittest.main()
