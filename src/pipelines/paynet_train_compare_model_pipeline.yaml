@@ -100,9 +100,9 @@ jobs:
     type: command
     component: ./../components/training/register_model.yaml
     inputs:
-      model_id: trained
-      model_path: ${{parent.jobs.paynet_train_model_step.outputs.output_model}}
-      model_name: ${{parent.inputs.model_name}}
       comparison_report: ${{parent.jobs.compare_current_trained_model_step.outputs.comparison_report}}
+      model_name: ${{parent.inputs.model_name}}
+      model_id: trained
+      trained_model: ${{parent.jobs.paynet_train_model_step.outputs.output_model}}            
     outputs:
       register_report: ${{parent.outputs.model_register_report}}
