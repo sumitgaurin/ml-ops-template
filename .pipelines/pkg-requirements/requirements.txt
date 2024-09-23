@@ -18,3 +18,5 @@ coverage==7.4.0            # Alternative for measuring code coverage
 # Performance optimization libraries
 joblib==1.4.0              # For parallel processing with scikit-learn
 
+# Azure connection libraries
+azure-identity==1.18.0     # For authenticating with Azure services
