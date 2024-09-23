@@ -51,7 +51,7 @@ stages:
 
           - script: |
               echo 'Running unit test cases ...'
-              pytest --cov=src --cov-report=html --cov-report=xml --junitxml=junit/TEST-results.xml ./tests
+              pytest --doctest-modules --cov=src --cov-report=html --cov-report=xml --junitxml=junit/TEST-results.xml ./tests
             displayName: "Run unit test cases"
             workingDirectory: "$(Build.SourcesDirectory)"
 
@@ -60,6 +60,14 @@ stages:
             inputs:
               testResultsFormat: "JUnit"
               testResultsFiles: "**/TEST-*.xml"
+
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish code coverage results'
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(Build.SourcesDirectory)/**/coverage.xml'
+              pathToSources: '$(Build.SourcesDirectory)/src'
+              reportDirectory: '$(Build.SourcesDirectory)/htmlcov'
 
   - stage: "Train"
     displayName: "Run training for the paynet model"
