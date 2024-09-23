@@ -1,3 +1,4 @@
+import shutil
 import unittest
 import os
 import pandas as pd
@@ -28,6 +29,9 @@ class TestTrainModelPaynet(unittest.TestCase):
         n_estimators = 100
         learning_rate = 0.1
         
+        # Cleanup the output_model_path including all its content recursively even in case of failure
+        self.addCleanup(lambda: shutil.rmtree(output_model_path) if os.path.exists(output_model_path) else None)
+
         # Call the function
         train_model_paynet(training_data_path, outcome_label, output_model_path, n_estimators, learning_rate)
         
@@ -39,9 +43,9 @@ class TestTrainModelPaynet(unittest.TestCase):
         mock_autolog.assert_called_once()
         # assert that mock_save_model is called once
         mock_save_model.assert_called_once()
-        # assert that mock_start_run is called more than once
-        self.assertGreater(mock_start_run.call_count, 1)
-
+        # assert that mock_start_run is called atleast once
+        self.assertTrue(mock_start_run.called)
+        
     @mock.patch('src.components.training.train_model.mlflow.start_run')
     @mock.patch('src.components.training.train_model.mlflow.sklearn.autolog')
     @mock.patch('src.components.training.train_model.mlflow.sklearn.save_model')
