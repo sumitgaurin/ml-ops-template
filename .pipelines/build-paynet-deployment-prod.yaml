@@ -124,8 +124,8 @@ stages:
                 echo "Downloading model from development environment..."
                 az ml model download \
                   --subscription $subscription_id \
-                  --resource_group $RESOURCE_GROUP_NAME \
-                  --workspace_name $WORKSPACE_NAME \
+                  --resource-group $RESOURCE_GROUP_NAME \
+                  --workspace-name $WORKSPACE_NAME \
                   --name $MODEL_NAME \
                   --version $MODEL_VERSION \
                   --download-path $LOCAL_FOLDER
@@ -147,11 +147,11 @@ stages:
                 echo "Getting the subscription id for service connection"
                 subscription_id=$(az account show --query id --output tsv)
 
-                echo "Downloading model to production environment..."
+                echo "Uploading model to production environment..."
                 az ml model create \
                   --subscription $subscription_id \
-                  --resource_group $RESOURCE_GROUP_NAME \
-                  --workspace_name $WORKSPACE_NAME \
+                  --resource-group $RESOURCE_GROUP_NAME \
+                  --workspace-name $WORKSPACE_NAME \
                   --name $MODEL_NAME \
                   --version $MODEL_VERSION \
                   --path $LOCAL_FOLDER 
