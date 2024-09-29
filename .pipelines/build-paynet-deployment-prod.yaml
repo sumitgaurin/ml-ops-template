@@ -18,7 +18,7 @@ parameters:
   - name: model_name
     displayName: "Model Name for Deployment"
     type: string
-    default: "paynet-model"
+    default: "paynet_diabetes"
   - name: model_version
     displayName: "Model Version for Deployment"
     type: string
