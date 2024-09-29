@@ -1,8 +1,13 @@
 import argparse
+import json
 import os
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient
-from azure.ai.ml.entities import ManagedOnlineEndpoint, ManagedOnlineDeployment
+from azure.ai.ml.entities import (
+    ManagedOnlineEndpoint,
+    ManagedOnlineDeployment,
+    CodeConfiguration,
+)
 from azure.core.exceptions import ResourceNotFoundError
 
 
@@ -36,6 +41,7 @@ def deploy_model(args):
 
     # Check if the workspace has a private endpoint enabled if public network access is disabled
     if not args.public_endpoint:
+        print("Checking if the workspace has a private endpoint enabled...")
         workspace = ml_client.workspaces.get(args.workspace_name)
         if workspace.public_network_access:
             print(
@@ -45,25 +51,33 @@ def deploy_model(args):
 
     # Create endpoint if it doesn't exist
     if not endpoint:
+        print(f"Creating endpoint '{endpoint_name}'.")
         endpoint = ManagedOnlineEndpoint(
             name=endpoint_name,
             auth_mode=args.auth_mode,
             public_network_access="enabled" if args.public_endpoint else "disabled",
         )
         ml_client.online_endpoints.begin_create_or_update(endpoint).wait()
-        print(f"Endpoint '{endpoint_name}' created.")
+        print(f"Endpoint '{endpoint.name}' created.")
 
     # Get the model
     if args.model_version:
         model = ml_client.models.get(name=args.model_name, version=args.model_version)
+        print(f"Using model: {args.model_name} version: {args.model_version}")
     else:
         # Get the latest version of the model
         models = ml_client.models.list(name=args.model_name)
         model = max(models, key=lambda m: m.version)
-        print(f"No model version specified. Using the latest version: {model.version}")
+        print(f"Using model: {args.model_name} latest version: {model.version}")
 
-    # Get the environment
-    environment = ml_client.environments.get(name=args.environment_name)
+    # Get the latest version of the environment
+    environment = max(
+        ml_client.environments.list(name=args.environment_name),
+        key=lambda en: en.version,
+    )
+    print(
+        f"Using environment: {args.environment_name} latest version: {environment.version}"
+    )
 
     # Define the deployment
     deployment = ManagedOnlineDeployment(
@@ -77,10 +91,11 @@ def deploy_model(args):
 
     # Add scoring script if provided
     if args.scoring_file:
-        deployment.code_configuration = {
-            "code": os.path.dirname(args.scoring_file),
-            "scoring_script": os.path.basename(args.scoring_file),
-        }
+        print(f"Adding scoring script '{args.scoring_file}' to deployment.")
+        deployment.code_configuration = CodeConfiguration(
+            code=os.path.dirname(args.scoring_file),
+            scoring_script=os.path.basename(args.scoring_file),
+        )
 
     # Create or update the deployment
     print(f"Creating or updating deployment '{args.deployment_name}'.")
@@ -88,9 +103,9 @@ def deploy_model(args):
     print(f"Deployment '{args.deployment_name}' completed.")
 
     # Set the deployment as default
-    ml_client.online_endpoints.begin_update(
-        endpoint_name, default_deployment_name=args.deployment_name
-    ).wait()
+    allocation = json.loads(args.traffic_allocation) if args.traffic_allocation else {}
+    endpoint.traffic = allocation
+    ml_client.online_endpoints.begin_create_or_update(endpoint).wait()
     print(
         f"Deployment '{args.deployment_name}' set as default for endpoint '{endpoint_name}'."
     )
@@ -136,6 +151,11 @@ if __name__ == "__main__":
         required=True,
         help="Name of the Azure ML environment to use",
     )
+    parser.add_argument(
+        "--traffic_allocation",
+        type=str,
+        help="Deployments and their traffic allocation to the endpoint in json format",
+    )
 
     # Optional parameters with defaults
     parser.add_argument(
@@ -149,7 +169,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--instance_count", type=int, default=1, help="Number of instances to deploy"
-    )
+    )    
     parser.add_argument(
         "--public_endpoint",
         action="store_true",

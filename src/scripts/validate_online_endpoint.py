@@ -1,5 +1,6 @@
 import argparse
 import json
+import ast
 from jsondiff import diff
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient, load_environment, load_component
@@ -12,8 +13,14 @@ def compare_json(json1, json2) -> bool:
     :param json2: The second json object
     :return: True if the json objects are equal, False otherwise
     """
+    print(f"Comparing json objects...")
+    print(f"Json1: {json1}")
+    print(f"Json2: {json2}")    
+
     # Compare the json objects and return true if they are equal and there is no difference
-    return diff(json1, json2) == {}
+    difference = diff(json1, json2)
+    print(f"Diff: {difference}")
+    return difference == {}
 
 
 def get_ml_client(args) -> MLClient:
@@ -58,25 +65,29 @@ def main(args):
     ml_client = get_ml_client(args)
 
     # Invoke the end point using the ml_client
+    print(f"Invoking the endpoint '{args.endpoint_name}'...")
     scoring_response = ml_client.online_endpoints.invoke(
         endpoint_name=args.endpoint_name, 
         deployment_name=args.deployment_name,
         request_file=args.request_data
     )
 
-    # Read the response from the scoring endpoint
-    json_result = scoring_response.read()
-    print("Model Response:")
-    print(json_result)
-
+    print("Response Received...")
+    actual_result = ast.literal_eval(scoring_response)
+    print("Response: ", actual_result)
+    
     # Read the expected result from the response data file
     with open(args.response_data, "r") as file:
         expected_result = file.read()
+    print("Expected Result: ", expected_result)
 
     # Compare the expected result with the actual result in json format
     assert compare_json(
-        json.loads(json_result), json.loads(expected_result)
+        json.loads(actual_result), json.loads(expected_result)
     ), "The response data does not match the expected result"
+
+    print("The response data matches the expected result")
+    print("Validation successful!")
 
 
 if __name__ == "__main__":
