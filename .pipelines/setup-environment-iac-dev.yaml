@@ -39,8 +39,8 @@ stages:
         deploymentScope: 'Resource Group'
         azureResourceManagerConnection: '$(AZURE_RM_SVC_CONNECTION_DEV)'
         action: 'Create Or Update Resource Group'
-        resourceGroupName: '${{ parameters.resource_group_name }}'  # Corrected
-        location: '${{ parameters.location }}'                      # Corrected
+        resourceGroupName: '${{ parameters.resource_group_name }}'  
+        location: '${{ parameters.location }}'                      
         templateLocation: 'Linked artifact'
         csmFile: '$(Build.SourcesDirectory)/.pipelines/templates/arm-mlworkspace.json'
         csmParametersFile: '$(Build.SourcesDirectory)/.pipelines/templates/parameters-mlworkspace-dev.json'
