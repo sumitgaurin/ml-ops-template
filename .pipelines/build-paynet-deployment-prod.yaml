@@ -66,7 +66,7 @@ stages:
   - stage: "Transfer"
     displayName: "Transfer model from development to production workspace"
     jobs:
-      - job: "Transfer Model"
+      - job: "Transfer_Model"
         displayName: "Transfer model from development to production workspace"
         pool:
           vmImage: "ubuntu-latest"
@@ -167,7 +167,7 @@ stages:
   - stage: "Deploy"
     displayName: "Deploy the model to online endpoint in production workspace"
     jobs:
-      - job: "Deploy Endpoint"
+      - job: "Deploy_Endpoint"
         displayName: "Deploy model to production workspace"
         pool:
           vmImage: "ubuntu-latest"
@@ -239,7 +239,7 @@ stages:
   - stage: "Test"
     displayName: "Test the online endpoint in production workspace"
     jobs:
-      - job: "Test Endpoint"
+      - job: "Test_Endpoint"
         displayName: "Test the newly deployed online endpoint in production workspace"
         pool:
           vmImage: "ubuntu-latest"
