@@ -4,7 +4,7 @@ from azure.ai.ml import MLClient
 import mlflow
 
 
-def download_model(ml_client, model_name, model_version, local_folder):
+def download_model(ml_client: MLClient, model_name:str, model_version:str, local_folder:str):
     """
     Download the model from Azure ML workspace.
 
@@ -16,15 +16,15 @@ def download_model(ml_client, model_name, model_version, local_folder):
 
     # Download the model from Azure ML workspace
     ml_client.models.download(
-        model_name=model_name,
-        model_version=model_version,
-        local_path=local_folder,
+        name=model_name,
+        version=model_version,
+        download_path=local_folder,
     )
 
     print(f"Model downloaded to {local_folder}")
 
 
-def upload_model(ml_client, model_name, model_version, local_folder):
+def upload_model(ml_client:MLClient, model_name:str, model_version:str, local_folder:str):
     """
     Upload the model to Azure ML workspace.
 
