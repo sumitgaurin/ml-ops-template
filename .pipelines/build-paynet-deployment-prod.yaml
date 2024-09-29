@@ -122,14 +122,13 @@ stages:
                 subscription_id=$(az account show --query id --output tsv)
 
                 echo "Downloading model from development environment..."
-                python ./src/scripts/transfer_model.py \
-                  --subscription_id $subscription_id \
+                az ml model download \
+                  --subscription $subscription_id \
                   --resource_group $RESOURCE_GROUP_NAME \
                   --workspace_name $WORKSPACE_NAME \
-                  --model_name $MODEL_NAME \
-                  --model_version $MODEL_VERSION \
-                  --local_folder $LOCAL_FOLDER \
-                  --operation "download"
+                  --name $MODEL_NAME \
+                  --version $MODEL_VERSION \
+                  --download-path $LOCAL_FOLDER
             env:
               WORKSPACE_NAME: "${{ parameters.dev_workspace_name }}"
               RESOURCE_GROUP_NAME: "${{ parameters.dev_resource_group_name }}"
@@ -138,7 +137,7 @@ stages:
               LOCAL_FOLDER: "$(Build.SourcesDirectory)/temp_model"
 
           - task: AzureCLI@2
-            displayName: "Upl;oad model to production workspace"
+            displayName: "Upload model to production workspace"
             inputs:
               azureSubscription: "$(AZURE_RM_SVC_CONNECTION_PROD)"
               scriptType: bash
@@ -149,20 +148,19 @@ stages:
                 subscription_id=$(az account show --query id --output tsv)
 
                 echo "Downloading model to production environment..."
-                python ./src/scripts/transfer_model.py \
-                  --subscription_id $subscription_id \
+                az ml model create \
+                  --subscription $subscription_id \
                   --resource_group $RESOURCE_GROUP_NAME \
                   --workspace_name $WORKSPACE_NAME \
-                  --model_name $MODEL_NAME \
-                  --model_version $MODEL_VERSION \
-                  --local_folder $LOCAL_FOLDER \
-                  --operation "upload"
+                  --name $MODEL_NAME \
+                  --version $MODEL_VERSION \
+                  --path $LOCAL_FOLDER 
             env:
               WORKSPACE_NAME: "${{ parameters.prod_workspace_name }}"
               RESOURCE_GROUP_NAME: "${{ parameters.prod_resource_group_name }}"
               MODEL_NAME: "${{ parameters.model_name }}"
               MODEL_VERSION: "${{ parameters.model_version }}"
-              LOCAL_FOLDER: "$(Build.SourcesDirectory)/temp_model"
+              LOCAL_FOLDER: "$(Build.SourcesDirectory)/temp_model/${{ parameters.model_name }}"
 
   - stage: "Deploy"
     displayName: "Deploy the model to online endpoint in production workspace"
