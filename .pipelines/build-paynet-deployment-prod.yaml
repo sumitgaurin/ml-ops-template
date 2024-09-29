@@ -1,0 +1,300 @@
+parameters:
+  - name: dev_workspace_name
+    displayName: "Azure ML Development Workspace Name"
+    type: string
+    default: "mlw-mldemo-dev-sind"
+  - name: dev_resource_group_name
+    displayName: "Development Resource Group Name"
+    type: string
+    default: "sgupta_sandbox"
+  - name: prod_workspace_name
+    displayName: "Azure ML Production Workspace Name"
+    type: string
+    default: "mlw-mlds-prod-eus"
+  - name: prod_resource_group_name
+    displayName: "Production Resource Group Name"
+    type: string
+    default: "rg-mlds-prod"
+  - name: model_name
+    displayName: "Model Name for Deployment"
+    type: string
+    default: "paynet-model"
+  - name: model_version
+    displayName: "Model Version for Deployment"
+    type: string
+    default: "1"
+  - name: endpoint_name
+    displayName: "Endpoint Name for Deployment"
+    type: string
+    default: "paynet-endpoint"
+  - name: deployment_name
+    displayName: "Deployment Name for Deployment"
+    type: string
+    default: "paynet-deployment"
+  - name: deployment_environment
+    displayName: "Deployment Environment for Deployment"
+    type: string
+    default: "sklearn-dev310"
+  - name: auth_mode
+    displayName: "Authentication Mode for Deployment"
+    type: string
+    default: "key"
+  - name: traffic_allocation
+    displayName: "Traffic Allocation for Deployment"
+    type: string
+    default: '{\"blue\": 100}'
+  - name: scoring_file
+    displayName: "Scoring File Path for Deployment"
+    type: string
+    default: "./src/endpoints/scoring/score.py"
+  - name: test_request_data
+    displayName: "Test Request Data for Endpoint Validation"
+    type: string
+    default: "./src/scripts/endpoint_request.json"
+  - name: test_response_data
+    displayName: "Test Response Data for Endpoint Validation"
+    type: string
+    default: "./src/scripts/endpoint_expected_response.json"
+
+pr: none
+trigger: none
+
+variables:
+  - group: mlops-deploy
+
+stages:
+  - stage: "Transfer"
+    displayName: "Transfer model from development to production workspace"
+    jobs:
+      - job: "Transfer Model"
+        displayName: "Transfer model from development to production workspace"
+        pool:
+          vmImage: "ubuntu-latest"
+        timeoutInMinutes: 60
+        steps:
+          - task: UsePythonVersion@0
+            displayName: "Use Python 3.10"
+            inputs:
+              versionSpec: "3.10.x"
+              addToPath: true
+              architecture: "x64"
+
+          - script: |
+              echo 'Running python dependency installation ...'
+              source ./.pipelines/pkg-requirements/install.sh
+            displayName: "Install Python dependencies"
+            workingDirectory: "$(Build.SourcesDirectory)"
+
+          - script: |
+              echo "Dev Workspace Name: '${{ parameters.dev_workspace_name }}'"
+              echo "Dev Resource Group Name: '${{ parameters.dev_resource_group_name }}'"
+              echo "Prod Workspace Name: '${{ parameters.prod_workspace_name }}'"
+              echo "Prod Resource Group Name: '${{ parameters.prod_resource_group_name }}'"
+              echo "Model Name: '${{ parameters.model_name }}'"
+              echo "Model Version: '${{ parameters.model_version }}'"
+            displayName: "Verify Parameter Values"
+
+          - task: AzureCLI@2
+            displayName: "Verify dev workspace connection"
+            inputs:
+              azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                echo "Adding azure ml extension..."
+                az extension add -n ml --allow-preview false
+
+                echo "Verifying the deployment..."
+                az ml workspace show --name $WORKSPACE_NAME --resource-group $RESOURCE_GROUP_NAME
+            env:
+              WORKSPACE_NAME: "${{ parameters.dev_workspace_name }}"
+              RESOURCE_GROUP_NAME: "${{ parameters.dev_resource_group_name }}"
+
+          - task: AzureCLI@2
+            displayName: "Download model from development workspace"
+            inputs:
+              azureSubscription: "$(AZURE_RM_SVC_CONNECTION_DEV)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: "$(Build.SourcesDirectory)"
+              inlineScript: |
+                echo "Getting the subscription id for service connection"
+                subscription_id=$(az account show --query id --output tsv)
+
+                echo "Downloading model from development environment..."
+                python ./src/scripts/transfer_model.py \
+                  --subscription_id $subscription_id \
+                  --resource_group $RESOURCE_GROUP_NAME \
+                  --workspace_name $WORKSPACE_NAME \
+                  --model_name $MODEL_NAME \
+                  --model_version $MODEL_VERSION \
+                  --local_folder $LOCAL_FOLDER \
+                  --operation "download"
+            env:
+              WORKSPACE_NAME: "${{ parameters.dev_workspace_name }}"
+              RESOURCE_GROUP_NAME: "${{ parameters.dev_resource_group_name }}"
+              MODEL_NAME: "${{ parameters.model_name }}"
+              MODEL_VERSION: "${{ parameters.model_version }}"
+              LOCAL_FOLDER: "$(Build.SourcesDirectory)/temp_model"
+
+          - task: AzureCLI@2
+            displayName: "Upl;oad model to production workspace"
+            inputs:
+              azureSubscription: "$(AZURE_RM_SVC_CONNECTION_PROD)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: "$(Build.SourcesDirectory)"
+              inlineScript: |
+                echo "Getting the subscription id for service connection"
+                subscription_id=$(az account show --query id --output tsv)
+
+                echo "Downloading model to production environment..."
+                python ./src/scripts/transfer_model.py \
+                  --subscription_id $subscription_id \
+                  --resource_group $RESOURCE_GROUP_NAME \
+                  --workspace_name $WORKSPACE_NAME \
+                  --model_name $MODEL_NAME \
+                  --model_version $MODEL_VERSION \
+                  --local_folder $LOCAL_FOLDER \
+                  --operation "upload"
+            env:
+              WORKSPACE_NAME: "${{ parameters.prod_workspace_name }}"
+              RESOURCE_GROUP_NAME: "${{ parameters.prod_resource_group_name }}"
+              MODEL_NAME: "${{ parameters.model_name }}"
+              MODEL_VERSION: "${{ parameters.model_version }}"
+              LOCAL_FOLDER: "$(Build.SourcesDirectory)/temp_model"
+
+  - stage: "Deploy"
+    displayName: "Deploy the model to online endpoint in production workspace"
+    jobs:
+      - job: "Deploy Endpoint"
+        displayName: "Deploy model to production workspace"
+        pool:
+          vmImage: "ubuntu-latest"
+        timeoutInMinutes: 60
+        steps:
+          - task: UsePythonVersion@0
+            displayName: "Use Python 3.10"
+            inputs:
+              versionSpec: "3.10.x"
+              addToPath: true
+              architecture: "x64"
+
+          - script: |
+              echo 'Running python dependency installation ...'
+              source ./.pipelines/pkg-requirements/install.sh
+            displayName: "Install Python dependencies"
+            workingDirectory: "$(Build.SourcesDirectory)"
+
+          - script: |
+              echo "Prod Workspace Name: '${{ parameters.prod_workspace_name }}'"
+              echo "Prod Resource Group Name: '${{ parameters.prod_resource_group_name }}'"
+              echo "Model Name: '${{ parameters.model_name }}'"
+              echo "Model Version: '${{ parameters.model_version }}'"
+              echo "Endpoint Name: '${{ parameters.endpoint_name }}'"
+              echo "Deployment Name: '${{ parameters.deployment_name }}'"
+              echo "Deployment Environment: '${{ parameters.deployment_environment }}'"
+              echo "Authentication Mode: '${{ parameters.auth_mode }}'"
+              echo "Traffic Allocation: '${{ parameters.traffic_allocation }}'"
+              echo "Scoring File Path: '${{ parameters.scoring_file }}'"
+            displayName: "Verify Parameter Values"
+
+          - task: AzureCLI@2
+            displayName: "Deploye the model to online endpoint"
+            inputs:
+              azureSubscription: "$(AZURE_RM_SVC_CONNECTION_PROD)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: "$(Build.SourcesDirectory)"
+              inlineScript: |
+                echo "Getting the subscription id for service connection"
+                subscription_id=$(az account show --query id --output tsv)
+
+                echo "Downloading model from development environment..."
+                python ./src/scripts/deploy_online_endpoint.py \
+                  --subscription_id $subscription_id \
+                  --resource_group $RESOURCE_GROUP_NAME \
+                  --workspace_name $WORKSPACE_NAME \
+                  --model_name $MODEL_NAME \
+                  --model_version $MODEL_VERSION \
+                  --endpoint_name $ENDPOINT_NAME \
+                  --deployment_name $DEPLOYMENT_NAME \
+                  --environment_name $DEPLOYMENT_ENVIRONMENT \
+                  --auth_mode $AUTH_MODE \
+                  --scoring_file $SCORING_FILE \
+                  --public_endpoint 
+                  --traffic_allocation $TRAFFIC_ALLOCATION
+            env:
+              WORKSPACE_NAME: "${{ parameters.prod_workspace_name }}"
+              RESOURCE_GROUP_NAME: "${{ parameters.prod_resource_group_name }}"
+              MODEL_NAME: "${{ parameters.model_name }}"
+              MODEL_VERSION: "${{ parameters.model_version }}"
+              ENDPOINT_NAME: "${{ parameters.endpoint_name }}"
+              DEPLOYMENT_NAME: "${{ parameters.deployment_name }}"
+              DEPLOYMENT_ENVIRONMENT: "${{ parameters.deployment_environment }}"
+              AUTH_MODE: "${{ parameters.auth_mode }}"
+              TRAFFIC_ALLOCATION: "${{ parameters.traffic_allocation }}"
+              SCORING_FILE: "${{ parameters.scoring_file }}"
+
+  - stage: "Test"
+    displayName: "Test the online endpoint in production workspace"
+    jobs:
+      - job: "Test Endpoint"
+        displayName: "Test the newly deployed online endpoint in production workspace"
+        pool:
+          vmImage: "ubuntu-latest"
+        timeoutInMinutes: 60
+        steps:
+          - task: UsePythonVersion@0
+            displayName: "Use Python 3.10"
+            inputs:
+              versionSpec: "3.10.x"
+              addToPath: true
+              architecture: "x64"
+
+          - script: |
+              echo 'Running python dependency installation ...'
+              source ./.pipelines/pkg-requirements/install.sh
+            displayName: "Install Python dependencies"
+            workingDirectory: "$(Build.SourcesDirectory)"
+
+          - script: |
+              echo "Prod Workspace Name: '${{ parameters.prod_workspace_name }}'"
+              echo "Prod Resource Group Name: '${{ parameters.prod_resource_group_name }}'"
+              echo "Model Name: '${{ parameters.model_name }}'"
+              echo "Model Version: '${{ parameters.model_version }}'"
+              echo "Endpoint Name: '${{ parameters.endpoint_name }}'"
+              echo "Deployment Name: '${{ parameters.deployment_name }}'"
+              echo "Deployment Environment: '${{ parameters.deployment_environment }}'"
+              echo "Authentication Mode: '${{ parameters.auth_mode }}'"
+              echo "Traffic Allocation: '${{ parameters.traffic_allocation }}'"
+              echo "Scoring File Path: '${{ parameters.scoring_file }}'"
+            displayName: "Verify Parameter Values"
+
+          - task: AzureCLI@2
+            displayName: "Deploye the model to online endpoint"
+            inputs:
+              azureSubscription: "$(AZURE_RM_SVC_CONNECTION_PROD)"
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: "$(Build.SourcesDirectory)"
+              inlineScript: |
+                echo "Getting the subscription id for service connection"
+                subscription_id=$(az account show --query id --output tsv)
+
+                echo "Downloading model from development environment..."
+                python ./src/scripts/validate_online_endpoint.py \
+                  --subscription_id $subscription_id \
+                  --resource_group $RESOURCE_GROUP_NAME \
+                  --workspace_name $WORKSPACE_NAME \
+                  --endpoint_name "paynetdiabetes1" \
+                  --deployment_name "blue" \
+                  --request_data $REQUEST_DATA \
+                  --response_data $RESPONSE_DATA
+            env:
+              WORKSPACE_NAME: "${{ parameters.prod_workspace_name }}"
+              RESOURCE_GROUP_NAME: "${{ parameters.prod_resource_group_name }}"
+              ENDPOINT_NAME: "${{ parameters.endpoint_name }}"
+              DEPLOYMENT_NAME: "${{ parameters.deployment_name }}"
+              REQUEST_DATA: "${{ parameters.test_request_data }}"
+              RESPONSE_DATA: "${{ parameters.test_response_data }}"
