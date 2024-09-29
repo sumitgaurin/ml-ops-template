@@ -1,0 +1,6 @@
+{
+    "predicted_class": "Diabetes",
+    "probability": 0.9474619754559603,
+    "model_name": "paynet_diabetes",
+    "model_version": "1"
+}

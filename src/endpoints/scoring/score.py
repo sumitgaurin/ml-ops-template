@@ -16,7 +16,7 @@ def init():
     model_dir = os.environ.get("AZUREML_MODEL_DIR")
 
     # Construct the path to the model file
-    model_path = os.path.join(model_dir, "model.pkl")
+    model_path = os.path.join(model_dir, "model", "model.pkl")
 
     # Extract the model name and version from the directory structure
     # Format of AZUREML_MODEL_DIR: ./azureml-models/$MODEL_NAME/$VERSION

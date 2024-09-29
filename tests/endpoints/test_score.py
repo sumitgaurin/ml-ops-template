@@ -7,7 +7,7 @@ from src.endpoints.scoring.score import init, run
 
 # Ensure the mock_model_dir is correctly set
 mock_model_dir = os.path.join(".", "azureml-models", "diabetes_model", "1")
-mock_model_path = os.path.join(mock_model_dir, "model.pkl")
+mock_model_path = os.path.join(mock_model_dir, "model", "model.pkl")
 mock_model = MagicMock()
 mock_model.predict_proba.return_value = [[0.3, 0.7]]
 
