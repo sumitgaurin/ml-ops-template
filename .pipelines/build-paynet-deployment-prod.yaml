@@ -26,11 +26,11 @@ parameters:
   - name: endpoint_name
     displayName: "Endpoint Name for Deployment"
     type: string
-    default: "paynet-endpoint"
+    default: "paynetendpoint"
   - name: deployment_name
     displayName: "Deployment Name for Deployment"
     type: string
-    default: "paynet-deployment"
+    default: "blue"
   - name: deployment_environment
     displayName: "Deployment Environment for Deployment"
     type: string
